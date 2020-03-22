@@ -1,0 +1,131 @@
+---
+title: "GUPPI Output Report"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+
+output: 
+  flexdashboard::flex_dashboard:
+    theme: spacelab
+    orientation: columns
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+
+library(flexdashboard)
+library(magrittr)
+library(stringr)
+library(purrr)
+library(dplyr)
+library(UpSetR)
+library(ggplot2)
+library(DT)
+library(plotly)
+library(ggthemes)
+library(viridis)
+library(waffle)
+
+```
+
+`r paste('#', "SUMMARY", '{data-navmenu="TDReport Filename"}')`
+
+Column {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Protein UpSet for all TDReports
+
+```{r, fig.width=10, fig.height=6}
+
+if (length(filelist) > 1) {
+  
+  proteins_list <- 
+    results_protein %>%
+    .[1:(length(.) - 1)] %>% 
+    map(~.$UNIPROTKB) %>% 
+    set_names(
+      map(filelist, basename) %>% 
+        map(file_path_sans_ext) %>% 
+        map(str_wrap, width = 15)
+    )
+  
+  UpSetR::upset(
+    UpSetR::fromList(proteins_list),
+    nintersects = NA,
+    sets.x.label = "Total Protein IDs",
+    keep.order = T,
+    mainbar.y.label = "Unique Protein IDs in Intersection",
+    text.scale =  c(2, 2.5, 2, 2, 1.5, 2),
+    point.size = 4,
+    line.size = 1.5,
+    group.by = "degree"
+  )
+  
+} else {
+  
+  pander::pander("Only one TDreport analyzed, no UpSet plot made") 
+  
+}
+
+```
+
+### Proteoform UpSet for all TDReports
+
+```{r, fig.width=10, fig.height=6}
+
+if (length(filelist) > 1) {
+  
+  pfrms_list <- 
+    results_proteoform %>%
+    .[1:(length(.) - 1)] %>% 
+    map(~.$ProteoformRecordNum) %>% 
+    set_names(
+      map(filelist, basename) %>% 
+        map(file_path_sans_ext) %>% 
+        map(str_wrap, width = 15)
+    )
+  
+  UpSetR::upset(
+    UpSetR::fromList(pfrms_list),
+    nintersects = NA,
+    sets.x.label = "Total Proteoform IDs",
+    keep.order = T,
+    mainbar.y.label = "Unique Proteoform IDs in Intersection",
+    text.scale =  c(2, 2.5, 2, 2, 1.5, 2),
+    point.size = 4,
+    line.size = 1.5,
+    group.by = "degree"
+  )
+  
+} else {
+  
+  pander::pander("Only one TDreport analyzed, no UpSet plot made") 
+  
+}
+
+
+```
+
+
+```{r include=FALSE}
+
+out <- NULL
+
+options(knitr.duplicate.label = 'allow')
+
+for (i in seq_along(filelist)) {
+  
+  out <- c(
+    out, 
+    knitr::knit_child(
+      system.file(
+        "rmd",
+        "generate_dashboard_child.Rmd",
+        package = "GUPPI"
+      )    
+    )
+  )
+  
+}
+
+```
+
+`r paste(knitr::knit_child(text = out), collapse = '')`
