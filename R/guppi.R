@@ -24,9 +24,12 @@ guppi <-
          msg = "filedir is not a recognized path"
       )
 
-      assertthat::assert_that(
-         assertthat::is.string(filename),
-         msg = "filename is not a string"
+      purrr::map_chr(
+         filename,
+         ~assertthat::assert_that(
+            assertthat::is.string(.x),
+            msg = "A filename is not a string"
+         )
       )
 
       assertthat::assert_that(

@@ -4,9 +4,10 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 
 output: 
   flexdashboard::flex_dashboard:
-    theme: spacelab
-    orientation: columns
+    css: ../css/maglab_theme.css
+    orientation: rows
     vertical_layout: scroll
+    horizontal_layout: scroll
 ---
 
 ```{r setup, include=FALSE}
@@ -31,9 +32,30 @@ library(waffle)
 Column {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
+### Summary
+
+#### Files analyzed
+
+```{r}
+
+tibble(
+  `tdReport Name` = map(filelist, basename) %>% unlist(),
+  `Protein Count` = map(proteinlist, nrow) %>% unlist(),
+  `Proteoform Count` = map(proteoformlist, nrow) %>% unlist()
+) %>% 
+  knitr::kable() 
+
+```
+
+#### Analysis parameters
+
+False detection rate: `r fdr*100`%
+
+Taxon number for UniProt data: `r as.integer(taxon_number)`
+
 ### Protein UpSet for all TDReports
 
-```{r, fig.width=10, fig.height=6}
+```{r, fig.width=10, fig.height=6, dpi = 200}
 
 if (length(filelist) > 1) {
   
@@ -43,7 +65,7 @@ if (length(filelist) > 1) {
     map(~.$UNIPROTKB) %>% 
     set_names(
       map(filelist, basename) %>% 
-        map(file_path_sans_ext) %>% 
+        map(tools::file_path_sans_ext) %>% 
         map(str_wrap, width = 15)
     )
   
@@ -69,7 +91,7 @@ if (length(filelist) > 1) {
 
 ### Proteoform UpSet for all TDReports
 
-```{r, fig.width=10, fig.height=6}
+```{r, fig.width=10, fig.height=6, dpi = 200}
 
 if (length(filelist) > 1) {
   
@@ -79,7 +101,7 @@ if (length(filelist) > 1) {
     map(~.$ProteoformRecordNum) %>% 
     set_names(
       map(filelist, basename) %>% 
-        map(file_path_sans_ext) %>% 
+        map(tools::file_path_sans_ext) %>% 
         map(str_wrap, width = 15)
     )
   
@@ -129,3 +151,11 @@ for (i in seq_along(filelist)) {
 ```
 
 `r paste(knitr::knit_child(text = out), collapse = '')`
+
+# Report Layout {data-navmenu="Help"}
+
+Filler to be replaced later
+
+# About {data-navmenu="Help"}
+
+Created by David Butcher. Package available on [Github](https://github.com/davidsbutcher/GUPPI).

@@ -1,13 +1,12 @@
 `r paste('#', basename(filelist[[i]]), '{data-navmenu="TDReport Filename"}')`
 
-`r shiny::tags$h2(basename(filelist[[i]]), style="text-align:center")`
-
-Column {.tabset .tabset-fade}
------------------------------------------------------------------------
+`r shiny::tags$h3(basename(filelist[[i]]), style="text-align:center")`
 
 ```{r setup, include=FALSE}
 
 library(flexdashboard)
+library(shiny)
+library(shinydashboard)
 library(magrittr)
 library(stringr)
 library(purrr)
@@ -20,21 +19,42 @@ library(ggthemes)
 library(viridis)
 library(waffle)
 
+# Plotly parameters
+
+download_button_params <- 
+  list(
+    format = "svg"
+  )
+
+# ggplot themes
+
+col_plot_theme <- 
+  list(
+    theme_minimal(),
+    theme(
+      axis.text.x = element_text(angle = 90),
+      panel.grid.major.x = element_blank()
+    )
+  )
+
+heatmap_theme <- 
+  list(
+    theme_minimal(),
+    theme(
+      text = element_text(size=16)
+    ) 
+  )
+
 ```
+
+Row 1 {.tabset .tabset-fade data-height=800}
+-------------------------------------
 
 ### Best Protein Hits
 
 ```{r echo=FALSE}
 
 results_protein[[i]] %>%
-  dplyr::select(
-    -c(
-      "SEQUENCE", "ORGANISM",
-      "ORGANISM-ID", "FUNCTION",
-      "SUBCELLULAR-LOCATIONS", "GO_term",
-      "GO-ID", "ENTRY-NAME")
-  ) %>%
-  dplyr::select("UNIPROTKB", "PROTEIN-NAMES", everything()) %>% 
   mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>%
   mutate(
     `PROTEIN-NAMES` = 
@@ -44,7 +64,28 @@ results_protein[[i]] %>%
   mutate(GlobalQvalue = formatC(GlobalQvalue, format = "e", digits = 3)) %>%
   mutate(GRAVY = formatC(GRAVY, format = "f", digits = 3)) %>% 
   mutate(MonoisotopicMass = formatC(MonoisotopicMass, format = "f", digits = 4)) %>% 
-  mutate(AverageMass = formatC(AverageMass, format = "f", digits = 4)) %>% 
+  mutate(AverageMass = formatC(AverageMass, format = "f", digits = 4)) %>%
+  dplyr::select(
+    "UNIPROTKB",
+    "PROTEIN-NAMES",
+    "GlobalQvalue",
+    "ObservedPrecursorMass",
+    "MonoisotopicMass",
+    "GRAVY",
+    "fraction",
+    "filename",
+    everything()
+  ) %>%
+  dplyr::rename(
+    "UniProt Accession" = UNIPROTKB,
+    "Protein Name" = `PROTEIN-NAMES`,
+    "Global Q-value" = GlobalQvalue,
+    "Obs. Precursor Mass" = ObservedPrecursorMass,
+    "Monoiso. Mass" = MonoisotopicMass,
+    "GRAVY Score" = GRAVY,
+    "Fraction" = fraction,
+    "Filename" = filename
+  ) %>% 
   DT::datatable(
     extensions = c("FixedColumns", "Buttons"),
     class = "hover",
@@ -52,7 +93,13 @@ results_protein[[i]] %>%
       pageLength = 10,
       lengthMenu = c(10, 25),
       pagingType = "full_numbers",
-      columnDefs = list(list(className = 'dt-center')),
+      columnDefs = list(
+        list(
+          className = 'dt-center',
+          visible = FALSE,
+          targets = c(9:length(results_protein[[i]]))
+        )
+      ),
       dom = "Bfrtip",
       scrollX = FALSE,
       buttons = c("copy", "csv", "excel", "colvis")
@@ -66,26 +113,74 @@ results_protein[[i]] %>%
 
 ```
 
-### Protein Counts by Filename
+### Best Proteoform Hits
 
 ```{r}
 
-plot <- 
-  results_protein[[i]] %>% 
-  group_by(filename) %>% 
-  summarise("protein count" = n()) %>%
-  mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>% 
-  # mutate(filename = stringr::str_trunc(filename, 40, side = "left")) %>%
-  ggplot() +
-  geom_col(aes(filename, `protein count`)) +
-  labs(x = "Filename",
-       y = "Protein Count") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 8))
-
-plotly::ggplotly(plot)
+results_proteoform[[i]] %>%
+  mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>%
+  mutate(
+    `PROTEIN-NAMES` = 
+      stringr::str_trunc(`PROTEIN-NAMES`, 60, "right", ellipsis = "..."
+      )
+  ) %>% 
+  mutate(GlobalQvalue = formatC(GlobalQvalue, format = "e", digits = 2)) %>%
+  mutate(GRAVY = formatC(GRAVY, format = "f", digits = 3)) %>% 
+  mutate(MonoisotopicMass = formatC(MonoisotopicMass, format = "f", digits = 4)) %>% 
+  mutate(AverageMass = formatC(AverageMass, format = "f", digits = 4)) %>%
+  dplyr::select(
+    "UNIPROTKB",
+    "ProteoformRecordNum",
+    "PROTEIN-NAMES",
+    "GlobalQvalue",
+    "ObservedPrecursorMass",
+    "MonoisotopicMass",
+    "Modification",
+    "GRAVY",
+    "fraction",
+    "filename",
+    everything()
+  ) %>%
+  dplyr::rename(
+    "UniProt Accession" = UNIPROTKB,
+    "Proteoform Record Num." = ProteoformRecordNum,
+    "Protein Name" = `PROTEIN-NAMES`,
+    "Global Q-value" = GlobalQvalue,
+    "Obs. Precursor Mass" = ObservedPrecursorMass,
+    "Monoiso. Mass" = MonoisotopicMass,
+    "GRAVY Score" = GRAVY,
+    "Fraction" = fraction,
+    "Filename" = filename
+  ) %>% 
+  DT::datatable(
+    extensions = c("FixedColumns", "Buttons"),
+    class = "hover",
+    options = list(
+      pageLength = 10,
+      lengthMenu = c(10, 25),
+      pagingType = "full_numbers",
+      columnDefs = list(
+        list(
+          className = 'dt-center',
+          visible = FALSE,
+          targets = c(10:length(results_proteoform[[i]]))
+        )
+      ),
+      dom = "Bfrtip",
+      scrollX = FALSE,
+      buttons = c("copy", "csv", "excel", "colvis")
+    )
+  ) %>% 
+  DT::formatStyle(
+    1:length(results_proteoform[[i]]),
+    fontSize = "9",
+    digits = 3
+  )
 
 ```
+
+Row {.tabset .tabset-fade}
+-------------------------------------
 
 ### Protein Counts by Fraction
 
@@ -96,18 +191,82 @@ plot <-
   group_by(fraction) %>% 
   summarise("protein count" = n()) %>%
   ggplot() +
-  geom_col(aes(fraction, `protein count`)) +
-  labs(x = "Fraction",
-       y = "Protein Count") +
-  theme(axis.text.x = element_text(angle = 90))
+  geom_col(
+    aes(fraction, `protein count`),
+    color = "black",
+    fill = "#4C4184",
+    size = 0.25
+  ) +
+  labs(
+    x = "Fraction",
+    y = "Protein Count"
+  ) +
+  col_plot_theme
 
-plotly::ggplotly(plot)
+plotly::ggplotly(plot) %>% 
+  plotly::config(
+    displaylogo = FALSE,
+    toImageButtonOptions = download_button_params
+  ) %>% 
+  plotly::layout(
+    xaxis = list(
+      tickfont = list(
+        size = 12
+      )
+    )
+  )
 
 ```
 
+### Protein Counts by Filename
+
+``` {r}
+
+plot <- 
+  results_protein[[i]] %>% 
+  group_by(filename) %>% 
+  summarise("protein count" = n()) %>%
+  mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>% 
+  # mutate(filename = stringr::str_trunc(filename, 40, side = "left")) %>%
+  ggplot() +
+  geom_col(
+    aes(filename, `protein count`),
+    color = "black",
+    fill = "#4C4184",
+    size = 0.25
+  ) +
+  labs(
+    x = "Filename",
+    y = "Protein Count"
+  ) +
+  guides(
+    color = "none",
+    fill = "none"
+  ) +
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 8)) +
+  col_plot_theme
+
+plotly::ggplotly(plot) %>% 
+  plotly::config(
+    displaylogo = FALSE,
+    toImageButtonOptions = download_button_params
+  ) %>% 
+  plotly::layout(
+    xaxis = list(
+      tickfont = list(
+        size = 8
+      )
+    )
+  )
+
+```
+
+Row
+-------------------------------------
+
 ### Protein Heatmaps
 
-```{r, dpi = 300}
+```{r}
 
 bin_size <- 1000   # SPECIFY SIZE for heatmap mass bins
 bins <-  seq.int(0, 200000, by = bin_size)
@@ -124,26 +283,95 @@ protein_heatmap_data <-
 
 protein_heatmap <- 
   protein_heatmap_data %>% 
-  ggplot(aes(mass_bin, fraction,
-             fill = `Protein Count`)) +
+  ggplot(
+    aes(
+      mass_bin/1000, 
+      fraction,
+      fill = `Protein Count`
+    )
+  ) +
   geom_tile() +
   scale_fill_viridis_c(option = "C", direction = -1) +
-  xlim(0,
-       plyr::round_any(
-         max(protein_heatmap_data$mass_bin),
-         10000, f = ceiling)
+  xlim(
+    0,
+    plyr::round_any(
+      max(protein_heatmap_data$mass_bin/1000),
+      10, f = ceiling
+    )
   ) +
   scale_y_discrete(limits = rev(levels(protein_heatmap_data$fraction))) +
-  labs(x = "Mass Bin (Da)",
-       y = "Fraction") +
+  labs(
+    x = "Mass Bin (kDa)",
+    y = "Fraction"
+  ) +
+  heatmap_theme
+
+# print(protein_heatmap)
+
+plotly::ggplotly(protein_heatmap) %>% 
+  plotly::config(
+    displaylogo = FALSE,
+    toImageButtonOptions = download_button_params
+  )
+
+
+
+```
+
+Row
+-------------------------------------
+
+### Proteoform Heatmaps
+
+```{r}
+
+bin_size <- 1000   # SPECIFY SIZE for heatmap mass bins
+bins <-  seq.int(0, 200000, by = bin_size)
+
+proteoform_heatmap_data <- 
+  results_proteoform[[i]] %>% 
+  select(c("ObservedPrecursorMass", "fraction")) %>% 
+  mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
+  group_by(fraction, mass_bin) %>% 
+  summarize(n()) %>%
+  mutate(mass_bin =  (mass_bin * bin_size) - bin_size) %>% 
+  rename("Proteoform Count" = `n()`) %>%
+  ungroup() %>% 
+  mutate(fraction = forcats::as_factor(fraction))
+
+proteoform_heatmap <- 
+  proteoform_heatmap_data %>% 
+  ggplot(
+    aes(mass_bin, fraction, fill = `Proteoform Count`)
+  ) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "C", direction = -1) +
+  xlim(
+    0,
+    plyr::round_any(
+      max(proteoform_heatmap_data$mass_bin),
+      10000, f = ceiling
+    )
+  ) +
+  scale_y_discrete(limits = rev(levels(proteoform_heatmap_data$fraction))) +
+  labs(
+    x = "Mass Bin (Da)",
+    y = "Fraction"
+  ) +
   theme_minimal() +
   theme(text = element_text(size=18))
 
-print(protein_heatmap)
+plotly::ggplotly(proteoform_heatmap) %>% 
+  plotly::config(
+    displaylogo = FALSE,
+    toImageButtonOptions = download_button_params
+  )
 
-# plotly::ggplotly(protein_heatmap)
 
 ```
+
+Row
+-------------------------------------
 
 ### Protein Waffle Plots
 
@@ -168,24 +396,30 @@ waffledata_protein_all_byfraction <-
         rep("NOTA", length(fractionlist))
       )
     ),
-    Count = c(counts_byfrac_fltrd$cytosol_count,
-              counts_byfrac_fltrd$membrane_count,
-              counts_byfrac_fltrd$periplasm_count,
-              counts_byfrac_fltrd$NOTA_count),
+    Count = c(
+      counts_byfrac_fltrd$cytosol_count,
+      counts_byfrac_fltrd$membrane_count,
+      counts_byfrac_fltrd$periplasm_count,
+      counts_byfrac_fltrd$NOTA_count
+    ),
     fraction = rep(counts_byfrac_fltrd$fraction, 4)
   ) %>%
   group_by(fraction, Localization) %>% 
   summarize(Count)
 
-output <- 
+output <-
   waffledata_protein_all_byfraction %>%
   ggplot(aes(fill = Localization, values = Count)) +
-  waffle::stat_waffle(color = "white", size = 0.35, n_rows = 10,
-                      flip = TRUE, geom = "tile") +
-  facet_wrap(~fraction, nrow = 1, strip.position = "bottom") +
+  waffle::stat_waffle(
+    color = "white", size = 0.2, n_rows = 10,
+    flip = TRUE, geom = "tile"
+  ) +
+  facet_wrap(~fraction, nrow = 1, strip.position = c("bottom")) +
   scale_x_discrete(expand=c(0,0)) +
-  scale_y_continuous(labels = function(x) x * 10, # this multiplier must be equal to n_rows above
-                     expand = c(0,0)) +
+  scale_y_continuous(
+    labels = function(x) x * 10, # this multiplier must be equal to n_rows above
+    expand = c(0,0)
+  ) +
   ggthemes::scale_fill_tableau(name=NULL) +
   coord_equal() +
   labs(
@@ -196,81 +430,49 @@ output <-
   theme(panel.grid = element_blank(), axis.ticks.y = element_line()) +
   guides(fill = guide_legend("Localization", reverse = TRUE))
 
-print(output)
-
-# plotly::ggplotly(output, originalData = FALSE, tooltip = "Localization")
+plotly::ggplotly(output, originalData = FALSE, tooltip = "Localization") %>%
+  plotly::config(
+    displaylogo = FALSE,
+    toImageButtonOptions = download_button_params
+  )
 
 ```
 
-### Best Proteoform Hits
+Row
+-------------------------------------
+
+### Unique Proteoforms per Accession
 
 ```{r}
 
-results_proteoform[[i]] %>%
-  dplyr::select(-c("ORGANISM",
-                   "ORGANISM-ID", "FUNCTION",
-                   "SUBCELLULAR-LOCATIONS", "GO_term",
-                   "PROTEIN-NAMES", "GO-ID", "fraction")) %>%
-  mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>% 
-  mutate(GlobalQvalue = formatC(GlobalQvalue, format = "e", digits = 2)) %>%
-  mutate(GRAVY = formatC(GRAVY, format = "f", digits = 3)) %>% 
-  mutate(MonoisotopicMass = formatC(MonoisotopicMass, format = "f", digits = 4)) %>% 
-  mutate(AverageMass = formatC(AverageMass, format = "f", digits = 4)) %>% 
+results_proteoform[[i]] %>% 
+  group_by(UNIPROTKB) %>% 
+  summarize(
+    `Unique Proteoforms` = n()
+  ) %>% 
+  rename("UniProt Accession" = UNIPROTKB) %>% 
   DT::datatable(
     extensions = c("FixedColumns", "Buttons"),
     class = "hover",
-    options = list(pageLength = 10,
-                   lengthMenu = c(10, 25),
-                   pagingType = "full_numbers",
-                   columnDefs = list(list(className = 'dt-center')),
-                   dom = "Bfrtip",
-                   scrollX = FALSE,
-                   buttons = c("copy", "csv", "excel", "colvis"))
+    options = list(
+      pageLength = 10,
+      lengthMenu = c(10, 25),
+      pagingType = "full_numbers",
+      columnDefs = list(
+        list(
+          className = 'dt-center'
+        )
+      ),
+      dom = "Bfrtip",
+      scrollX = FALSE,
+      buttons = c("copy", "csv", "excel")
+    )
   ) %>% 
-  DT::formatStyle(1:length(results_proteoform[[i]]),
-                  fontSize = "9",
-                  digits = 3)
-```
+  DT::formatStyle(
+    1:2,
+    fontSize = "9"
+  )
 
-### Proteoform Heatmaps
-
-```{r}
-
-bin_size <- 1000   # SPECIFY SIZE for heatmap mass bins
-bins <-  seq.int(0, 200000, by = bin_size)
-
-proteoform_heatmap_data <- 
-  results_proteoform[[i]] %>% 
-  select(c("ObservedPrecursorMass", "fraction")) %>% 
-  mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
-  group_by(fraction, mass_bin) %>% 
-  summarize(n()) %>%
-  mutate(mass_bin =  (mass_bin * bin_size) - bin_size) %>% 
-  rename("Proteoform Count" = `n()`) %>%
-  ungroup() %>% 
-  mutate(fraction = forcats::as_factor(fraction))
-
-proteoform_heatmap <- 
-  proteoform_heatmap_data %>% 
-  ggplot(aes(mass_bin, fraction,
-             fill = `Proteoform Count`)) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "C", direction = -1) +
-  xlim(0,
-       plyr::round_any(
-         max(proteoform_heatmap_data$mass_bin),
-         10000, f = ceiling)
-  ) +
-  scale_y_discrete(limits = rev(levels(proteoform_heatmap_data$fraction))) +
-  labs(x = "Mass Bin (Da)",
-       y = "Fraction") +
-  theme_minimal() +
-  theme(text = element_text(size=18))
-
-print(proteoform_heatmap)
-
-# plotly::ggplotly(proteoform_heatmap)
 
 ```
-
 
