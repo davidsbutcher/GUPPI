@@ -4,10 +4,35 @@ Get UniProt Protein Info (GUPPI)
 Process TDPortal top-down reports (tdReports) by retrieving information
 from the UniProt webservice and filtering by a selectable FDR value.
 
+## Installation
+
+Install from Github with:
+
+``` r
+remotes::install_github("davidsbutcher/GUPPI")
+```
+
 ## Input
 
-The processing of tdReports is carried out by the `guppi()` function.
-Arguments are as follows:
+The processing of tdReports is carried out by the `guppi()` function. An
+example of running the function:
+
+``` r
+guppi(
+   "C:/Users/David Butcher/TDReports",
+   c(
+      "20200420_Excellent_TDReport_01.tdReport",
+      "20200420_Excellent_TDReport_02.tdReport"
+   ),
+   83333,
+   "C:/Users/David Butcher/Documents/guppi_output",
+   fdr = 0.01,
+   make_dashboard = TRUE,
+   use_PB = FALSE
+)
+```
+
+Arguments to the `guppi` function are as follows:
 
 ### Mandatory arguments
 
@@ -40,28 +65,37 @@ Arguments are as follows:
 ## Analysis of tdReports
 
 A connection is established to the SQLite database in the TD Report
-using `RSQLite`. The “main” output includes all protein isoform
-accession numbers with the lowest Q value from among all hits for each
-isoform and the name of the data file from which the lowest Q value hit
-was obtained. All isoforms with Q values which are missing or greater
-than the cutoff value are deleted. Output is also generated which
-contains all hits for all isoforms that are above the FDR cutoff
-(`/allproteinhits`) and lowest Q-value hits sorted by data file
-(`/proteinsbydatafile`).
+using `RSQLite`. All protein-level (or isoform) and proteform-level IDs
+and other relevant data for each ID are extracted. The taxon number is
+checked against files in the package directory to see if a corresponding
+UniProt taxon database has already been downloaded. If not, the UniProt
+web service is queried for all UniProt accession numbers in the taxon
+using the package `UniProt.ws`. Protein name, organism, organism taxon
+ID, protein sequence, protein function, subcellular location, and any
+associated GO IDs are returned. Note that some of these values may not
+be found and come back as empty or NA.
 
-UniProt data is added as detailed in the `Flat Files` section, with the
-exception that average and monoisotopic masses are taken directly from
-the tdReport file.
+The UniProt taxon database is used to add information for all IDs
+extracted from the tdReport. GO terms are obtained for all GO IDs using
+the `GO.db` package and terms corresponding to subcellular locations are
+saved in column “GO\_subcellular\_locations”. Average and monoisotopic
+masses are determined from the protein sequence (intact sequence for
+isoform-level IDs and proteoform sequence for proteoform-level IDs)
+using the `Peptides` package.
 
 Minimum Q value from among all hits, average and monoisotopic masses,
 and data file for lowest Q value hit are obtained for all proteoforms.
 Proteoforms whose Q values are above the FDR cutoff are deleted.
 Proteoforms whose corresponding protein isoform entry is above the FDR
-cutoff are also deleted. UniProt info for every unique proteoform record
-number is copied from corresponding protein entries to avoid wasting
-time by querying the UniProt database again.
+cutoff are also deleted, as in the TDViewer software.
 
 ## Output
+
+The “main” output includes Q values, observed precursor masses, data
+files, subcellular locations from the GO database and a variety of other
+parameters for all isoform and proteoform IDs. All isoform IDs and
+proteoform IDs with Q values which are missing or greater than the
+cutoff value (`fdr`) are deleted.
 
 Output files are saved to the output directory (`outputdir`). Files are
 timestamped with the time the script was initialized or share the same
