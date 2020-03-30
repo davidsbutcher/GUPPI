@@ -94,3 +94,7 @@ inst/old/A_install_packages.R
 inst/old/B_Download_Taxon.R
 
 inst/rmd/generate_report.Rmd
+
+.git-CORRUPT/
+
+README.Rmd
