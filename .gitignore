@@ -98,3 +98,5 @@ inst/rmd/generate_report.Rmd
 .git-CORRUPT/
 
 README.Rmd
+
+ignore/

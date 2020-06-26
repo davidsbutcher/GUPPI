@@ -8,10 +8,10 @@ guppi(
   filedir,
   filename,
   taxon_number,
+  outputdir,
   fdr = 0.01,
   make_dashboard = FALSE,
-  use_PB = FALSE,
-  max_workers = 8L
+  use_PB = FALSE
 )
 }
 \value{

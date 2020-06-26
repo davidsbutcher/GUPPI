@@ -38,8 +38,8 @@ guppi <-
       )
 
       assertthat::assert_that(
-         assertthat::is.dir(outputdir),
-         msg = "outputdir is not a recognized path"
+         assertthat::is.dir(dirname(outputdir)),
+         msg = "outputdir parent is not a recognized path"
       )
 
       assertthat::assert_that(
@@ -261,10 +261,12 @@ guppi <-
 
       results_protein <-
          proteinlist %>%
-         purrr::map(add_uniprot_info,
-                    taxon = taxon_number,
-                    database = UPdatabase,
-                    tdrep = tdreport_file) %>%
+         purrr::map(
+            add_uniprot_info,
+            taxon = taxon_number,
+            database = UPdatabase,
+            tdrep = tdreport_file
+         ) %>%
          purrr::map2(filelist, get_GO_terms, go_locs) %>%
          purrr::map(add_GRAVY) %>%
          purrr::map(add_masses) %>%
@@ -287,16 +289,37 @@ guppi <-
          get_locations_byfraction()
 
       # Protein results, all hits
-
+      # maybe this should be called proteoform allhits?
 
       results_protein_allhits <-
          proteinlistfull %>%
          purrr::map(add_GRAVY_allhits) %>%
-         purrr::map(add_fraction)
+         purrr::map(add_fraction) %>%
+         purrr::map(parse_mods_allhits, modification = tdreport_mods)
 
       names(results_protein_allhits) <-
          unlist(filelist) %>%
          basename()
+
+
+      # Proteoform results, best hits per-fraction
+
+      # results_protein_allhits %>%
+      #    purrr::map(
+      #       ~{
+      #          filter(.x, GlobalQvalue <= fdr) %>%
+      #             select(-c("HitId")) %>%
+      #             select(fraction, everything()) %>%
+      #             group_by(fraction, ProteoformRecordNum) %>%
+      #             filter(
+      #                GlobalQvalue == min(GlobalQvalue) &
+      #                   `P-score` == min(`P-score`) &
+      #                   `C-score` == max(`C-score`)
+      #             ) %>%
+      #             distinct() %>%
+      #             ungroup()
+      #       }
+      #    ) %>% .[[1]] %>% View
 
 
       # Proteform results
@@ -365,7 +388,12 @@ guppi <-
       names(results_proteoform)[[length(results_proteoform)]] <-
          "SUMMARY"
 
+
       # Save results ------------------------------------------------------------
+
+      if (dir.exists(outputdir) == FALSE) {
+         dir.create(outputdir)
+      }
 
       # Protein results
 
@@ -505,8 +533,12 @@ guppi <-
          dir.create(glue::glue("{outputdir}/workspace_image"))
       }
 
-      save.image(
-         glue::glue(
+      rm(UPdatabase)
+
+      save(
+         list = ls(envir = sys.frame(which = 1)),
+         envir = sys.frame(which = 1),
+         file = glue::glue(
             "{outputdir}/workspace_image/{systime}_workspace_image.RData"
          )
       )

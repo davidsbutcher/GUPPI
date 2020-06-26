@@ -491,6 +491,101 @@ get_locations_byfraction <-
       return(counts)
    }
 
+#' get_locations_byfraction2
+#'
+#' @param resultslist
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+get_locations_byfraction2 <-
+   function(resultslist) {
+
+      # This function gets counts of membrane, cytosolic, and "both" proteoforms based on
+      # GO terms pulled from UniProt for each unique accession number.
+
+      # THIS IS AN EXPERIMENTAL VERSION which gets locations based on GLOBAL BEST HITS,
+      # NOT PER FRACTION
+
+      counts <- tibble::tibble()
+
+      for (i in seq_along(resultslist)) {
+
+         tempresults <- tibble::tibble()
+
+         # For every proteoform in each output, get the count of proteoforms whose GO terms
+         # include "cytosol" OR "cytoplasm", "membrane", or BOTH.
+         # WE DO NOT DIFFERENTIATE BETWEEN MEMBRANE TYPES!
+
+         tempresults <-
+            resultslist[[i]] %>%
+            dplyr::mutate(tdreport_name = names(resultslist)[[i]]) %>%
+            dplyr::mutate(
+               cytosol =
+                  stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("cytosol|cytoplasm|ribosome")
+                  )
+            ) %>%
+            dplyr::mutate(
+               membrane =
+                  stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("membrane")
+                  ) &
+                  !stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("membrane-bounded periplasmic space")
+                  )
+            ) %>%
+            dplyr::mutate(
+               periplasm =
+                  stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("periplasm")
+                  )
+            ) %>%
+            dplyr::mutate(
+               NOTA =
+                  !stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("cytosol|cytoplasm|ribosome")
+                  ) &
+                  !stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("membrane")
+                  ) &
+                  !stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("membrane-bounded periplasmic space")
+                  ) &
+                  !stringr::str_detect(
+                     resultslist[[i]]$GO_subcell_loc,
+                     c("periplasm")
+                  )
+            )
+
+         tempresultssummary <-
+            tempresults %>%
+            dplyr::group_by(tdreport_name, fraction) %>%
+            dplyr::summarize(
+               protein_count = dplyr::n(),
+               cytosol_count = sum(cytosol),
+               membrane_count = sum(membrane),
+               periplasm_count = sum(periplasm),
+               NOTA_count = sum(NOTA)
+            )
+
+         counts <-
+            dplyr::union_all(tempresultssummary, counts)
+
+      }
+
+      return(counts)
+   }
+
 
 
 #' coalesce_by_column

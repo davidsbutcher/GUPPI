@@ -53,6 +53,9 @@ False detection rate: `r fdr*100`%
 
 Taxon number for UniProt data: `r as.integer(taxon_number)`
 
+
+NOTE: If any visualizations on the subsequent pages do not show, refresh the browser window.
+
 ### Protein UpSet for all TDReports
 
 ```{r, fig.width=10, fig.height=6, dpi = 200}
@@ -152,10 +155,8 @@ for (i in seq_along(filelist)) {
 
 `r paste(knitr::knit_child(text = out), collapse = '')`
 
-# Report Layout {data-navmenu="Help"}
-
-Filler to be replaced later
-
 # About {data-navmenu="Help"}
 
-Created by David Butcher. Package available on [Github](https://github.com/davidsbutcher/GUPPI).
+GUPPI package created by David Butcher (drdavidbutcher@gmail.com).
+
+Package available on [Github](https://github.com/davidsbutcher/GUPPI).

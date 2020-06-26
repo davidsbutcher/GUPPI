@@ -129,8 +129,12 @@ read_tdreport_protein_full <-
             "HitId", "ProteoformRecordNum", "AccessionNumber", "GlobalQvalue",
             "P-score", "C-score", "filename", "ObservedPrecursorMass",
             "MonoisotopicMass", "AverageMass", "ProteoformSequence",
-            IntactSequence = Sequence, "IsSubsequence", "ResultSet"
-         )
+            IntactSequence = Sequence, "IsSubsequence", "ResultSet",
+            "ModificationHash", "NTerminalModificationSetId",
+            "NTerminalModificationId", "CTerminalModificationSetId",
+            "CTerminalModificationId"
+         ) %>%
+         dplyr::ungroup()
 
       # Close database connection and return output table
 

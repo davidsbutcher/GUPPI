@@ -1,4 +1,4 @@
-#' parse_mods
+#' parse_mods_allhits
 #'
 #' @param tbl
 #' @param modification
@@ -7,7 +7,7 @@
 #'
 #' @examples
 
-parse_mods <-
+parse_mods_allhits <-
    function(
       tbl,
       modification = NULL
@@ -15,7 +15,7 @@ parse_mods <-
 
       if (is.null(modification) == TRUE) {
 
-         stop("No modifications table specified for parse_mods")
+         stop("No modifications table specified for parse_mods_allhits")
 
       }
 
@@ -79,7 +79,7 @@ parse_mods <-
 
       result1b <-
          result1a %>%
-         dplyr::group_by(ProteoformRecordNum) %>%
+         dplyr::group_by(HitId) %>%
          dplyr::mutate(ModNumber = seq_along(ModificationName)) %>%
          dplyr::mutate(ModNumber = paste("_Mod", ModNumber, sep = "")) %>%
          tidyr::pivot_wider(
