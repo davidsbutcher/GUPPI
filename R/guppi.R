@@ -532,6 +532,45 @@ guppi <-
             )
          )
 
+
+         ## Get run time and message using PushBullet
+
+         totaltime <-
+            capture.output(tictoc::toc()) %>%
+            stringr::str_extract("[0-9]+") %>%
+            as.numeric() %>%
+            `/`(60) %>%
+            round(digits = 2)
+
+         message(paste0("\nElapsed time: ", totaltime, " min"))
+
+         # Optional line used to contact any Pushbullet enabled device.
+         # View ?pbSetup for help
+
+         if (usePB == TRUE) {
+
+            RPushbullet::pbPost(
+               "note", "GUPPI Analysis Finished",
+               paste0("Elapsed time: ", totaltime, " min \nOutput Dir: ", outputdir)
+            )
+
+         }
+
+         # Save Session Info ------------------------------------------------------
+
+         # Session info for every run is saved to a txt file in the
+         # output directory, in case
+
+         if (dir.exists(glue::glue("{outputdir}/session_info")) == FALSE) {
+            dir.create(glue::glue("{outputdir}/session_info"))
+         }
+
+         sessioninfo::session_info() %>%
+            capture.output() %>%
+            writeLines(
+               glue::glue("{outputdir}/session_info/{systime}_sessionInfo.txt")
+            )
+
       }
 
       # Make Dashboard ----------------------------------------------------------
@@ -570,43 +609,5 @@ guppi <-
          }
 
       }
-
-      ## Get run time and message using PushBullet
-
-      totaltime <-
-         capture.output(tictoc::toc()) %>%
-         stringr::str_extract("[0-9]+") %>%
-         as.numeric() %>%
-         `/`(60) %>%
-         round(digits = 2)
-
-      message(paste0("\nElapsed time: ", totaltime, " min"))
-
-      # Optional line used to contact any Pushbullet enabled device.
-      # View ?pbSetup for help
-
-      if (usePB == TRUE) {
-
-         RPushbullet::pbPost(
-            "note", "GUPPI Analysis Finished",
-            paste0("Elapsed time: ", totaltime, " min \nOutput Dir: ", outputdir)
-         )
-
-      }
-
-      # Save Session Info ------------------------------------------------------
-
-      # Session info for every run is saved to a txt file in the
-      # output directory, in case
-
-      if (dir.exists(glue::glue("{outputdir}/session_info")) == FALSE) {
-         dir.create(glue::glue("{outputdir}/session_info"))
-      }
-
-      sessioninfo::session_info() %>%
-         capture.output() %>%
-         writeLines(
-            glue::glue("{outputdir}/session_info/{systime}_sessionInfo.txt")
-         )
 
    }

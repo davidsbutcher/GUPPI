@@ -1,5 +1,20 @@
 
+library(assertthat)
+library(tictoc)
+library(RPushbullet)
+library(glue)
+library(feather)
 library(shiny)
+library(purrr)
+library(readxl)
+library(Peptides)
+library(stringr)
+library(rmarkdown)
+library(dplyr)
+library(magrittr)
+library(RSQLite)
+library(DBI)
+
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
