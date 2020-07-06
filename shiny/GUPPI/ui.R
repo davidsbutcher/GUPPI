@@ -1,20 +1,41 @@
+options(repos = BiocManager::repositories())
 
+library(dplyr)
 library(assertthat)
 library(tictoc)
 library(RPushbullet)
 library(glue)
 library(feather)
 library(shiny)
+library(shinydashboard)
 library(purrr)
 library(readxl)
 library(Peptides)
 library(stringr)
+library(forcats)
 library(rmarkdown)
-library(dplyr)
+library(flexdashboard)
+library(tibble)
+library(knitr)
+library(UpSetR)
+library(pander)
+library(ggplot2)
+library(DT)
+library(plotly)
+library(ggthemes)
+library(viridis)
+library(waffle)
 library(magrittr)
 library(RSQLite)
 library(DBI)
-
+library(GO.db)
+library(fs)
+library(dbplyr)
+library(tidyr)
+library(Biobase)
+library(UniProt.ws)
+library(BiocGenerics)
+library(AnnotationDbi)
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
@@ -36,9 +57,9 @@ shinyUI(
                 ),
                 br(),
                 numericInput(
-                  "taxon",
-                  "Taxon number",
-                  value = "9606"
+                    "taxon",
+                    "Taxon number",
+                    value = "9606"
                 ),
                 br(),
                 actionButton(

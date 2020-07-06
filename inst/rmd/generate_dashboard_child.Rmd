@@ -6,12 +6,12 @@
 
 knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
 
-library(dplyr)
 library(flexdashboard)
 library(shiny)
 library(shinydashboard)
 library(magrittr)
 library(stringr)
+library(forcats)
 library(purrr)
 library(UpSetR)
 library(ggplot2)
@@ -20,6 +20,7 @@ library(plotly)
 library(ggthemes)
 library(viridis)
 library(waffle)
+library(dplyr)
 
 # Plotly parameters
 
@@ -293,7 +294,7 @@ protein_heatmap_data <-
   ungroup() %>% 
   mutate(fraction = forcats::as_factor(fraction)) %>% 
   mutate(`Mass Bin (kDa)` = mass_bin/1000) %>% 
-  rename("Fraction" = fraction)
+  dplyr::rename("Fraction" = fraction)
 
 protein_heatmap <- 
   protein_heatmap_data %>% 
@@ -347,15 +348,15 @@ bins <-  seq.int(0, 200000, by = bin_size)
 proteoform_heatmap_data <- 
   results_proteoform[[i]] %>% 
   dplyr::select(c("ObservedPrecursorMass", "fraction")) %>% 
-  mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
-  group_by(fraction, mass_bin) %>% 
-  summarize(n()) %>%
-  mutate(mass_bin =  (mass_bin * bin_size) - bin_size) %>% 
-  rename("Proteoform Count" = `n()`) %>%
-  ungroup() %>% 
-  mutate(fraction = forcats::as_factor(fraction)) %>% 
-  mutate(`Mass Bin (kDa)` = mass_bin/1000) %>% 
-  rename("Fraction" = fraction)
+  dplyr::mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
+  dplyr::group_by(fraction, mass_bin) %>% 
+  dplyr::summarize(dplyr::n()) %>%
+  dplyr::mutate(mass_bin =  (mass_bin * bin_size) - bin_size) %>% 
+  dplyr::rename("Proteoform Count" = `n()`) %>%
+  dplyr::ungroup() %>% 
+  dplyr::mutate(fraction = forcats::as_factor(fraction)) %>% 
+  dplyr::mutate(`Mass Bin (kDa)` = mass_bin/1000) %>% 
+  dplyr::rename("Fraction" = fraction)
 
 proteoform_heatmap <- 
   proteoform_heatmap_data %>% 

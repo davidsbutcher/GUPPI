@@ -421,157 +421,95 @@ guppi <-
 
       # Save results ------------------------------------------------------------
 
-      if (saveOutput == TRUE) {
+      if (dir.exists(outputdir) == FALSE) {
+         dir.create(outputdir)
+      }
 
-         if (dir.exists(outputdir) == FALSE) {
-            dir.create(outputdir)
-         }
+      # Protein results
 
-         # Protein results
+      for (i in seq_along(names(results_protein))) {
 
-         for (i in seq_along(names(results_protein))) {
+         names(results_protein)[i] <-
+            stringr::str_replace_all(names(results_protein[i]), "[:punct:]", "")
 
-            names(results_protein)[i] <-
-               stringr::str_replace_all(names(results_protein[i]), "[:punct:]", "")
-
-            names(results_protein)[i] %<>%
-               stringr::str_trunc(28, "left") %>% paste(i, "_", ., sep = "")
-
-         }
-
-         if (dir.exists(glue::glue("{outputdir}/protein_results")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/protein_results"))
-         }
-
-         resultsname <-
-            glue::glue("{outputdir}/protein_results/{systime}_protein_results.xlsx")
-
-         message(
-            glue::glue("\nSaving protein results to {resultsname}")
-         )
-
-         results_protein %>%
-            writexl::write_xlsx(path = resultsname)
-
-
-         # Protein results, counts by fraction
-
-         if (dir.exists(glue::glue("{outputdir}/protein_results_countsbyfraction")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/protein_results_countsbyfraction"))
-         }
-
-         resultsname <-
-            glue::glue(
-               "{outputdir}/protein_results_countsbyfraction/{systime}_protein_countsbyfrac.xlsx"
-            )
-
-
-         results_protein_countsbyfraction %>%
-            writexl::write_xlsx(path = resultsname)
-
-
-         # Protein results, all hits
-
-
-         if (dir.exists(glue::glue("{outputdir}/protein_results_allhits")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/protein_results_allhits"))
-         }
-
-         filelist %>%
-            purrr::map(basename) %>%
-            purrr::map(tools::file_path_sans_ext) %>%
-            glue::glue_data("{outputdir}/protein_results_allhits/{.}_allhits.xlsx") %>%
-            as.list() %>%
-            purrr::walk2(
-               results_protein_allhits,
-               ~writexl::write_xlsx(.y, path = .x)
-            )
-
-         # Proteoform results
-
-         for (i in seq_along(names(results_proteoform))) {
-
-            names(results_proteoform)[i] <-
-               stringr::str_replace_all(names(results_proteoform[i]), "[:punct:]", "")
-
-            names(results_proteoform)[i] %<>%
-               stringr::str_trunc(28, "left") %>% paste(i, "_", ., sep = "")
-
-         }
-
-         if (dir.exists(glue::glue("{outputdir}/proteoform_results")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/proteoform_results"))
-         }
-
-         resultsname <-
-            glue::glue("{outputdir}/proteoform_results/{systime}_proteoform_results.xlsx")
-
-         message(
-            glue::glue("\nSaving proteoform results to {resultsname}")
-         )
-
-         results_proteoform %>%
-            writexl::write_xlsx(path = resultsname)
-
-
-         # Save Workspace ---------------------------------------------------------
-
-         # Just in case you want to see an image from a particular run of results
-
-         if (dir.exists(glue::glue("{outputdir}/workspace_image")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/workspace_image"))
-         }
-
-         rm(UPdatabase)
-
-         save(
-            list = ls(envir = sys.frame(which = 1)),
-            envir = sys.frame(which = 1),
-            file = glue::glue(
-               "{outputdir}/workspace_image/{systime}_workspace_image.RData"
-            )
-         )
-
-
-         ## Get run time and message using PushBullet
-
-         totaltime <-
-            capture.output(tictoc::toc()) %>%
-            stringr::str_extract("[0-9]+") %>%
-            as.numeric() %>%
-            `/`(60) %>%
-            round(digits = 2)
-
-         message(paste0("\nElapsed time: ", totaltime, " min"))
-
-         # Optional line used to contact any Pushbullet enabled device.
-         # View ?pbSetup for help
-
-         if (usePB == TRUE) {
-
-            RPushbullet::pbPost(
-               "note", "GUPPI Analysis Finished",
-               paste0("Elapsed time: ", totaltime, " min \nOutput Dir: ", outputdir)
-            )
-
-         }
-
-         # Save Session Info ------------------------------------------------------
-
-         # Session info for every run is saved to a txt file in the
-         # output directory, in case
-
-         if (dir.exists(glue::glue("{outputdir}/session_info")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/session_info"))
-         }
-
-         sessioninfo::session_info() %>%
-            capture.output() %>%
-            writeLines(
-               glue::glue("{outputdir}/session_info/{systime}_sessionInfo.txt")
-            )
+         names(results_protein)[i] %<>%
+            stringr::str_trunc(28, "left") %>% paste(i, "_", ., sep = "")
 
       }
+
+      if (dir.exists(glue::glue("{outputdir}/protein_results")) == FALSE) {
+         dir.create(glue::glue("{outputdir}/protein_results"))
+      }
+
+      resultsname <-
+         glue::glue("{outputdir}/protein_results/{systime}_protein_results.xlsx")
+
+      message(
+         glue::glue("\nSaving protein results to {resultsname}")
+      )
+
+      results_protein %>%
+         writexl::write_xlsx(path = resultsname)
+
+
+      # Protein results, counts by fraction
+
+      if (dir.exists(glue::glue("{outputdir}/protein_results_countsbyfraction")) == FALSE) {
+         dir.create(glue::glue("{outputdir}/protein_results_countsbyfraction"))
+      }
+
+      resultsname <-
+         glue::glue(
+            "{outputdir}/protein_results_countsbyfraction/{systime}_protein_countsbyfrac.xlsx"
+         )
+
+
+      results_protein_countsbyfraction %>%
+         writexl::write_xlsx(path = resultsname)
+
+
+      # Protein results, all hits
+
+
+      if (dir.exists(glue::glue("{outputdir}/protein_results_allhits")) == FALSE) {
+         dir.create(glue::glue("{outputdir}/protein_results_allhits"))
+      }
+
+      filelist %>%
+         purrr::map(basename) %>%
+         purrr::map(tools::file_path_sans_ext) %>%
+         glue::glue_data("{outputdir}/protein_results_allhits/{.}_allhits.xlsx") %>%
+         as.list() %>%
+         purrr::walk2(
+            results_protein_allhits,
+            ~writexl::write_xlsx(.y, path = .x)
+         )
+
+      # Proteoform results
+
+      for (i in seq_along(names(results_proteoform))) {
+
+         names(results_proteoform)[i] <-
+            stringr::str_replace_all(names(results_proteoform[i]), "[:punct:]", "")
+
+         names(results_proteoform)[i] %<>%
+            stringr::str_trunc(28, "left") %>% paste(i, "_", ., sep = "")
+
+      }
+
+      if (dir.exists(glue::glue("{outputdir}/proteoform_results")) == FALSE) {
+         dir.create(glue::glue("{outputdir}/proteoform_results"))
+      }
+
+      resultsname <-
+         glue::glue("{outputdir}/proteoform_results/{systime}_proteoform_results.xlsx")
+
+      message(
+         glue::glue("\nSaving proteoform results to {resultsname}")
+      )
+
+      results_proteoform %>%
+         writexl::write_xlsx(path = resultsname)
 
       # Make Dashboard ----------------------------------------------------------
 
@@ -582,32 +520,73 @@ guppi <-
             dir.create(glue::glue("{outputdir}/report"))
          }
 
-         if (is.null(dashboardPath) == TRUE){
-
-            rmarkdown::render(
-               system.file(
-                  "rmd",
-                  "generate_dashboard_parent.Rmd",
-                  package = "GUPPI"
-               ),
-               output_file =
-                  glue::glue("{outputdir}/report/{systime}_dashboard.html")
-            )
-
-         } else {
-
-            rmarkdown::render(
-               system.file(
-                  "rmd",
-                  "generate_dashboard_parent.Rmd",
-                  package = "GUPPI"
-               ),
-               output_file =
-                  dashboardPath
-            )
-
-         }
+         rmarkdown::render(
+            system.file(
+               "rmd",
+               "generate_dashboard_parent.Rmd",
+               package = "GUPPI"
+            ),
+            output_file =
+               glue::glue("{outputdir}/report/{systime}_dashboard.html")
+         )
 
       }
+
+      ## Get run time and message using PushBullet
+
+      totaltime <-
+         capture.output(tictoc::toc()) %>%
+         stringr::str_extract("[0-9]+") %>%
+         as.numeric() %>%
+         `/`(60) %>%
+         round(digits = 2)
+
+      message(paste0("\nElapsed time: ", totaltime, " min"))
+
+      # Optional line used to contact any Pushbullet enabled device.
+      # View ?pbSetup for help
+
+      if (usePB == TRUE) {
+
+         RPushbullet::pbPost(
+            "note", "GUPPI Analysis Finished",
+            paste0("Elapsed time: ", totaltime, " min \nOutput Dir: ", outputdir)
+         )
+
+      }
+
+      # Save Workspace ---------------------------------------------------------
+
+      # Just in case you want to see an image from a particular run of results
+
+      if (dir.exists(glue::glue("{outputdir}/workspace_image")) == FALSE) {
+         dir.create(glue::glue("{outputdir}/workspace_image"))
+      }
+
+      rm(UPdatabase)
+
+      save(
+         list = ls(envir = sys.frame(which = 1)),
+         envir = sys.frame(which = 1),
+         file = glue::glue(
+            "{outputdir}/workspace_image/{systime}_workspace_image.RData"
+         )
+      )
+
+
+      # Save Session Info ------------------------------------------------------
+
+      # Session info for every run is saved to a txt file in the
+      # output directory, in case
+
+      if (dir.exists(glue::glue("{outputdir}/session_info")) == FALSE) {
+         dir.create(glue::glue("{outputdir}/session_info"))
+      }
+
+      sessioninfo::session_info() %>%
+         capture.output() %>%
+         writeLines(
+            glue::glue("{outputdir}/session_info/{systime}_sessionInfo.txt")
+         )
 
    }
