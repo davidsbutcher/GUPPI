@@ -1,5 +1,5 @@
-options(repos = BiocManager::repositories())
 
+library(GUPPI)
 library(dplyr)
 library(assertthat)
 library(tictoc)
@@ -25,7 +25,6 @@ library(plotly)
 library(ggthemes)
 library(viridis)
 library(waffle)
-library(magrittr)
 library(RSQLite)
 library(DBI)
 library(GO.db)
@@ -35,7 +34,8 @@ library(tidyr)
 library(Biobase)
 library(UniProt.ws)
 library(AnnotationDbi)
-library(GUPPI)
+
+options(repos = BiocManager::repositories())
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
