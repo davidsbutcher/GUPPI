@@ -34,8 +34,8 @@ library(dbplyr)
 library(tidyr)
 library(Biobase)
 library(UniProt.ws)
-library(BiocGenerics)
 library(AnnotationDbi)
+library(GUPPI)
 
 options(shiny.maxRequestSize = 1000*1024^2)
 

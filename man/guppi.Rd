@@ -10,8 +10,10 @@ guppi(
   taxon_number,
   outputdir,
   fdr = 0.01,
-  make_dashboard = FALSE,
-  use_PB = FALSE
+  saveOutput = TRUE,
+  makeDashboard = FALSE,
+  dashboardPath = NULL,
+  usePB = FALSE
 )
 }
 \value{

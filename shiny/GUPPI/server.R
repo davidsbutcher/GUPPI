@@ -33,9 +33,9 @@ library(fs)
 library(dbplyr)
 library(tidyr)
 library(UniProt.ws)
-library(BiocGenerics)
 library(Biobase)
 library(AnnotationDbi)
+library(GUPPI)
 
 
 # Define server logic required to draw a histogram
