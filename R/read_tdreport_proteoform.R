@@ -71,6 +71,7 @@ read_tdreport_proteoform <-
             dplyr::tbl(con, "GlobalQualitativeConfidence"),
             by = c("Id" = "ExternalId")
          ) %>%
+         {if (!"Id.x" %in% names(.)) dplyr::mutate(., Id.x = NA)} %>%
          dplyr::rename("ExternalId" = Id.x) %>%
          dplyr::left_join(
             dplyr::tbl(con, "ChemicalProteoform"),
@@ -101,6 +102,7 @@ read_tdreport_proteoform <-
             "ResultSet" = Name.x, "filename" = Name.y,
             "ChemicalProteoformId" = ChemicalProteoformId.x
          ) %>%
+         {if (!"Id.y" %in% names(.)) dplyr::mutate(., Id.y = NA) else .} %>%
          dplyr::select(
             -Description.x, -Id.y, -Description.y, -ChemicalProteoformId.y,
             -Description, -FilePath

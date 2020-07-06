@@ -125,6 +125,7 @@ read_tdreport_protein_full <-
          dplyr::filter(GlobalQvalue == min(GlobalQvalue)) %>%
          dplyr::collect() %>%
          dplyr::left_join(hitscores) %>%
+         {if (!"IsSubsequence" %in% names(.)) dplyr::mutate(., IsSubsequence = NA) else .} %>%
          dplyr::select(
             "HitId", "ProteoformRecordNum", "AccessionNumber", "GlobalQvalue",
             "P-score", "C-score", "filename", "ObservedPrecursorMass",
