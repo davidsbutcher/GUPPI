@@ -12,7 +12,6 @@ library(shinydashboard)
 library(magrittr)
 library(stringr)
 library(purrr)
-library(dplyr)
 library(UpSetR)
 library(ggplot2)
 library(DT)
@@ -20,6 +19,7 @@ library(plotly)
 library(ggthemes)
 library(viridis)
 library(waffle)
+library(dplyr)
 
 # Plotly parameters
 
