@@ -4,7 +4,7 @@
 
 ```{r setup, include=FALSE}
 
-knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
+# knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
 
 library(flexdashboard)
 library(shiny)
@@ -350,9 +350,9 @@ proteoform_heatmap_data <-
   dplyr::select(c("ObservedPrecursorMass", "fraction")) %>% 
   dplyr::mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
   dplyr::group_by(fraction, mass_bin) %>% 
-  dplyr::summarize(dplyr::n()) %>%
+  dplyr::summarize(n = dplyr::n()) %>%
   dplyr::mutate(mass_bin =  (mass_bin * bin_size) - bin_size) %>% 
-  dplyr::rename("Proteoform Count" = `n()`) %>%
+  dplyr::rename("Proteoform Count" = n) %>%
   dplyr::ungroup() %>% 
   dplyr::mutate(fraction = forcats::as_factor(fraction)) %>% 
   dplyr::mutate(`Mass Bin (kDa)` = mass_bin/1000) %>% 
@@ -622,41 +622,41 @@ allhits_qvals_plot <-
 
 <!-- ``` -->
 
-Row
--------------------------------------
+<!-- Row -->
+<!-- ------------------------------------- -->
 
-### Unique Proteoforms per Accession
+<!-- ### Unique Proteoforms per Accession -->
 
-```{r}
+<!-- ```{r} -->
 
-results_proteoform[[i]] %>% 
-  group_by(UNIPROTKB) %>% 
-  summarize(
-    `Unique Proteoforms` = n()
-  ) %>% 
-  rename("UniProt Accession" = UNIPROTKB) %>% 
-  DT::datatable(
-    extensions = c("FixedColumns", "Buttons"),
-    class = "hover",
-    options = list(
-      pageLength = 10,
-      lengthMenu = c(10, 25),
-      pagingType = "full_numbers",
-      columnDefs = list(
-        list(
-          className = 'dt-center'
-        )
-      ),
-      dom = "Bfrtip",
-      scrollX = FALSE,
-      buttons = c("copy", "csv", "excel")
-    )
-  ) %>% 
-  DT::formatStyle(
-    1:2,
-    fontSize = "9"
-  )
+<!-- results_proteoform[[i]] %>%  -->
+<!--   group_by(UNIPROTKB) %>%  -->
+<!--   summarize( -->
+<!--     `Unique Proteoforms` = n() -->
+<!--   ) %>%  -->
+<!--   rename("UniProt Accession" = UNIPROTKB) %>%  -->
+<!--   DT::datatable( -->
+<!--     extensions = c("FixedColumns", "Buttons"), -->
+<!--     class = "hover", -->
+<!--     options = list( -->
+<!--       pageLength = 10, -->
+<!--       lengthMenu = c(10, 25), -->
+<!--       pagingType = "full_numbers", -->
+<!--       columnDefs = list( -->
+<!--         list( -->
+<!--           className = 'dt-center' -->
+<!--         ) -->
+<!--       ), -->
+<!--       dom = "Bfrtip", -->
+<!--       scrollX = FALSE, -->
+<!--       buttons = c("copy", "csv", "excel") -->
+<!--     ) -->
+<!--   ) %>%  -->
+<!--   DT::formatStyle( -->
+<!--     1:2, -->
+<!--     fontSize = "9" -->
+<!--   ) -->
 
 
-```
+<!-- ``` -->
 
