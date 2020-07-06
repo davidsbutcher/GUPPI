@@ -4,6 +4,8 @@
 
 ```{r setup, include=FALSE}
 
+knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
+
 library(flexdashboard)
 library(shiny)
 library(shinydashboard)

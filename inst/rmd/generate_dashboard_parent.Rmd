@@ -12,6 +12,8 @@ output:
 
 ```{r setup, include=FALSE}
 
+knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
+
 library(flexdashboard)
 library(magrittr)
 library(stringr)
