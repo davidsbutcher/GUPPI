@@ -14,6 +14,7 @@ output:
 
 knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
 
+library(dplyr)
 library(flexdashboard)
 library(magrittr)
 library(stringr)
@@ -25,7 +26,6 @@ library(plotly)
 library(ggthemes)
 library(viridis)
 library(waffle)
-library(dplyr)
 
 ```
 
