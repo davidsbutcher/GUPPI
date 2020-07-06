@@ -285,7 +285,7 @@ bins <-  seq.int(0, 200000, by = bin_size)
 
 protein_heatmap_data <- 
   results_protein[[i]] %>% 
-  select(c("ObservedPrecursorMass", "fraction")) %>% 
+  dplyr::select(c("ObservedPrecursorMass", "fraction")) %>% 
   mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
   group_by(fraction, mass_bin) %>% 
   summarize("Protein Count" = n()) %>%
@@ -346,7 +346,7 @@ bins <-  seq.int(0, 200000, by = bin_size)
 
 proteoform_heatmap_data <- 
   results_proteoform[[i]] %>% 
-  select(c("ObservedPrecursorMass", "fraction")) %>% 
+  dplyr::select(c("ObservedPrecursorMass", "fraction")) %>% 
   mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
   group_by(fraction, mass_bin) %>% 
   summarize(n()) %>%
