@@ -94,6 +94,9 @@ download_UP_database <-
 
       numberofchunks <- ceiling(length(UPtaxon@taxIdUniprots)/100)
 
+      glue::glue("Cutting taxon into {numberofchunks} chunks") %>%
+         message()
+
       accession_chunks <- chunk2(UPtaxon@taxIdUniprots, numberofchunks)
 
       safeselect <- purrr::safely(UniProt.ws::select)
