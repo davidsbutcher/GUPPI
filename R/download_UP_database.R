@@ -5,7 +5,7 @@
 #'
 #' @return
 #'
-#' @importFrom magrittr %>%
+#' @import magrittr
 #'
 #' @export
 #'

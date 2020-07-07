@@ -5,8 +5,8 @@ account: davidbutcher
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2539269
-bundleId: 3358559
+bundleId: 3364506
 url: https://davidsbutcher.shinyapps.io/GUPPI/
-when: 1594052044.60495
+when: 1594160096.44382
 asMultiple: FALSE
 asStatic: FALSE

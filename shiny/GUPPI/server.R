@@ -1,4 +1,5 @@
 
+library(magrittr)
 library(GUPPI)
 library(dplyr)
 library(assertthat)

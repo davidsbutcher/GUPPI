@@ -3,7 +3,7 @@
 #' @param tdreport Full path to tdReport file
 #' @param fdr_cutoff Cutoff for false detection rate, default 0.01
 #'
-#' @importFrom magrittr %>%
+#' @import magrittr
 #'
 #' @return
 #' @export

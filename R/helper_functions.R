@@ -43,7 +43,7 @@ kickout <-
 #' @param filename Filename to get full path for
 #' @param extension Vector of allowed file extensions
 #'
-#' @importFrom magrittr %>%
+#' @import magrittr
 #'
 #' @return
 #' A vector of full file paths

@@ -4,7 +4,6 @@
 #' @return
 #' A variety of information sheets.
 #'
-#' @importFrom magrittr %>%
 #'
 #' @export
 #'
