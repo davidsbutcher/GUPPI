@@ -41,14 +41,6 @@ vignettes/*.pdf
 
 GUPPI_TANK.R
 
-inst/extdata/2097_full_UniProt_database.feather
-
-inst/extdata/83333_full_UniProt_database.feather
-
-inst/extdata/UPtaxon2097.rds
-
-inst/extdata/UPtaxon83333.rds
-
 inst/extras/DSB_guppi_report.css
 
 inst/extras/report_template/04_allhits_Qval_vs_Mass.R
