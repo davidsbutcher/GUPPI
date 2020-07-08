@@ -8,6 +8,9 @@ output:
     orientation: rows
     vertical_layout: scroll
     horizontal_layout: scroll
+    navbar: 
+      - {title: "Github", icon: "fa-github", href: "http://github.com/davidsbutcher/GUPPI", align: right}
+
 ---
 
 ```{r setup, include=FALSE}
@@ -31,14 +34,12 @@ library(dplyr)
 
 ```
 
-`r paste('#', "SUMMARY", '{data-navmenu="TDReport Filename"}')`
+# Summary
 
-Column {.tabset .tabset-fade}
+Column {.tabset .tabset-fade data-width=960}
 -----------------------------------------------------------------------
 
-### Summary
-
-#### Files analyzed
+### Files analyzed
 
 ```{r}
 
@@ -51,14 +52,11 @@ tibble(
 
 ```
 
-#### Analysis parameters
+### Analysis parameters
 
 False detection rate: `r fdr*100`%
 
 Taxon number for UniProt data: `r as.integer(taxon_number)`
-
-
-NOTE: If any visualizations on the subsequent pages do not show, refresh the browser window.
 
 ### Protein UpSet for all TDReports
 
@@ -133,6 +131,7 @@ if (length(filelist) > 1) {
 
 ```
 
+<!-- For generating TDReport data tabs -->
 
 ```{r include=FALSE}
 
@@ -159,7 +158,7 @@ for (i in seq_along(filelist)) {
 
 `r paste(knitr::knit_child(text = out), collapse = '')`
 
-# About {data-navmenu="Help"}
+# About
 
 GUPPI package created by David Butcher (drdavidbutcher@gmail.com).
 
