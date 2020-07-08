@@ -38,7 +38,7 @@ library(Biobase)
 library(UniProt.ws)
 library(AnnotationDbi)
 
-    options(repos = BiocManager::repositories())
+options(repos = BiocManager::repositories())
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
@@ -58,25 +58,28 @@ shinyUI(
                     accept = c(".tdReport"),
                     multiple = TRUE
                 ),
-                br(),
-                numericInput(
+                "NOTE: Large reports can take a long time to upload!",
+                br(), br(),
+                selectInput(
                     "taxon",
                     "Taxon number",
-                    value = "9606"
+                    choices = c("83333","2097","6239")
                 ),
                 br(),
                 actionButton(
                     "start",
                     "Make it happen"
                 ),
-                br(),
+                br(), br(),
                 downloadButton("downloadReport", label = "Download Report"),
             ),
 
             # MAIN PANEL
 
             mainPanel(
-                textOutput("confirm")
+                textOutput("ULconfirm"),
+                textOutput("confirm"),
+                textOutput("error")
             )
         )
     )
