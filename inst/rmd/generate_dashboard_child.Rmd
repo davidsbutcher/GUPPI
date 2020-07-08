@@ -1,6 +1,6 @@
 `r paste('#', basename(filelist[[i]]), '{data-navmenu="TDReport Filename"}')`
 
-`r shiny::tags$h3(basename(filelist[[i]]), style="text-align:center")`
+`r shiny::tags$h3(basename(filelist[[i]]), style="text-align:center;color:#ffffff")`
 
 ```{r setup, include=FALSE}
 
