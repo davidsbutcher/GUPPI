@@ -18,7 +18,7 @@ guppi <-
       fdr = 0.01,
       saveOutput = TRUE,
       makeDashboard = FALSE,
-      dashboardPath = glue::glue("{outputdir}/report/{systime}_dashboard.html"),
+      dashboardPath = glue::glue("{outputdir}/report/{format(Sys.time(), '%Y%m%d_%H%M%S')}_dashboard.html"),
       usePB = FALSE
    ) {
 
@@ -597,6 +597,27 @@ guppi <-
             ),
             output_file =
                dashboardPath
+         )
+
+         fs::dir_delete(
+            fs::path(
+               outputdir,
+               "rmd"
+            )
+         )
+
+         fs::dir_delete(
+            fs::path(
+               outputdir,
+               "fonts"
+            )
+         )
+
+         fs::dir_delete(
+            fs::path(
+               outputdir,
+               "css"
+            )
          )
 
       }
