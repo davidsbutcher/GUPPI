@@ -18,7 +18,7 @@ guppi <-
       fdr = 0.01,
       saveOutput = TRUE,
       makeDashboard = FALSE,
-      dashboardPath = NULL,
+      dashboardPath = glue::glue("{outputdir}/report/{systime}_dashboard.html"),
       usePB = FALSE
    ) {
 
@@ -549,33 +549,58 @@ guppi <-
             dir.create(glue::glue("{outputdir}/report"))
          }
 
-         if (is.null(dashboardPath) == TRUE){
 
-            rmarkdown::render(
-               system.file(
-                  "rmd",
-                  "generate_dashboard_parent.Rmd",
-                  package = "GUPPI"
-               ),
-               output_file =
-                  glue::glue("{outputdir}/report/{systime}_dashboard.html")
-            )
+         # Copy folders to temp output directory and knit there to avoid file
+         # permission problems in shiny/shinyapps
 
-         } else {
+         fs::dir_copy(
+            system.file(
+               "rmd",
+               package = "GUPPI"
+            ),
+            fs::path(
+               outputdir,
+               "rmd"
+            ),
+            overwrite = TRUE
+         )
 
-            rmarkdown::render(
-               system.file(
-                  "rmd",
-                  "generate_dashboard_parent.Rmd",
-                  package = "GUPPI"
-               ),
-               output_file =
-                  dashboardPath
-            )
+         fs::dir_copy(
+            system.file(
+               "fonts",
+               package = "GUPPI"
+            ),
+            fs::path(
+               outputdir,
+               "fonts"
+            ),
+            overwrite = TRUE
+         )
 
-         }
+         fs::dir_copy(
+            system.file(
+               "css",
+               package = "GUPPI"
+            ),
+            fs::path(
+               outputdir,
+               "css"
+            ),
+            overwrite = TRUE
+         )
+
+         rmarkdown::render(
+            fs::path(
+               outputdir,
+               "rmd",
+               "generate_dashboard_parent.Rmd"
+            ),
+            output_file =
+               dashboardPath
+         )
 
       }
+
 
       if (saveOutput == TRUE) {
 

@@ -46,7 +46,7 @@ shinyServer(
             input$start,
             {
                 outputDir <- tempdir()
-                tempReport <- tempfile(fileext = ".html")
+                tempReport <- tempfile(fileext = ".html", tmpdir = outputDir)
 
                 GUPPI::guppi(
                     dirname(input$tdrep$datapath),

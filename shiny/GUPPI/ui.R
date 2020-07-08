@@ -38,7 +38,7 @@ library(Biobase)
 library(UniProt.ws)
 library(AnnotationDbi)
 
-options(repos = BiocManager::repositories())
+    options(repos = BiocManager::repositories())
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
