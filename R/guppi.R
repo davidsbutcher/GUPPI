@@ -521,19 +521,19 @@ guppi <-
 
          # Just in case you want to see an image from a particular run of results
 
-         if (dir.exists(glue::glue("{outputdir}/workspace_image")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/workspace_image"))
-         }
-
-         rm(UPdatabase)
-
-         save(
-            list = ls(envir = sys.frame(which = 1)),
-            envir = sys.frame(which = 1),
-            file = glue::glue(
-               "{outputdir}/workspace_image/{systime}_workspace_image.RData"
-            )
-         )
+         # if (dir.exists(glue::glue("{outputdir}/workspace_image")) == FALSE) {
+         #    dir.create(glue::glue("{outputdir}/workspace_image"))
+         # }
+         #
+         # rm(UPdatabase)
+         #
+         # save(
+         #    list = ls(envir = sys.frame(which = 1)),
+         #    envir = sys.frame(which = 1),
+         #    file = glue::glue(
+         #       "{outputdir}/workspace_image/{systime}_workspace_image.RData"
+         #    )
+         # )
 
       }
 
