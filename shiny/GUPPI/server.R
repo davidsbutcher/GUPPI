@@ -11,6 +11,8 @@ library(feather)
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
+library(shinyFiles)
+library(shinyjs)
 library(purrr)
 library(readxl)
 library(Peptides)
@@ -37,8 +39,13 @@ library(tidyr)
 library(Biobase)
 library(UniProt.ws)
 library(AnnotationDbi)
+library(writexl)
+library(readxl)
+library(sessioninfo)
 
 options(repos = BiocManager::repositories())
+
+is_local <- Sys.getenv('SHINY_PORT') == ""
 
 find_newest_file <-
    function(
@@ -126,6 +133,26 @@ get_data_path <-
 shinyServer(
    function(input, output, session) {
 
+      if (is_local == TRUE) hide("input_server")
+      if (is_local == FALSE) hide("input_local")
+
+      disable("GUPPIstart")
+      disable("VTstart")
+      disable("plot_type")
+      disable("downloadReport")
+      disable("downloadPDF")
+      disable("downloadSVG")
+      disable("downloadPNG")
+
+      volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
+
+      shinyFileChoose(
+         input = input,
+         "tdrep_local",
+         session = session,
+         roots = volumes
+      )
+
       observeEvent(
          input$tdrep,
          {
@@ -133,31 +160,75 @@ shinyServer(
                renderTable(
                   data.frame(`Uploaded files` = input$tdrep$name)
                )
+
+            enable("GUPPIstart")
+
+            output$outputPlot <-
+               NULL
          }
       )
 
       observeEvent(
-         input$GUPPIstart,
+         input$tdrep_local,
          {
-            validate(
-               need(input$tdrep, "Upload a tdReport first")
+            output$ULconfirm <-
+               renderTable(
+                  data.frame(
+                     `Uploaded files` = parseFilePaths(volumes, input$tdrep_local)$name
+                  )
+               )
+
+            enable("GUPPIstart")
+
+            output$outputPlot <-
+               NULL
+         }
+      )
+
+      if (is_local == FALSE) {
+
+         tdrep_path <-
+            reactive(
+               input$tdrep$datapath
             )
 
+         tdrep_name <-
+            reactive(
+               input$tdrep$name
+            )
+
+      } else if (is_local == TRUE) {
+
+         tdrep_path <-
+            reactive(
+               parseFilePaths(volumes, input$tdrep_local)$datapath
+            )
+
+         tdrep_name <-
+            reactive(
+               parseFilePaths(volumes, input$tdrep_local)$name
+            )
+
+      }
+
+      observeEvent(
+         input$GUPPIstart,
+         {
             outputDir <- tempdir()
             tempReport <- tempfile(fileext = ".html", tmpdir = outputDir)
 
             purrr::map2_chr(
-               input$tdrep$datapath,
+               tdrep_path(),
                fs::path(
-                  dirname(input$tdrep$datapath),
-                  input$tdrep$name
+                  dirname(tdrep_path()),
+                  tdrep_name()
                ),
                ~file.rename(.x, .y)
             )
 
             GUPPI::guppi(
-               dirname(input$tdrep$datapath)[[1]],
-               input$tdrep$name,
+               dirname(tdrep_path())[[1]],
+               tdrep_name(),
                as.integer(input$taxon),
                outputdir = outputDir,
                fdr = 0.01,
@@ -187,14 +258,21 @@ shinyServer(
             updateSelectInput(
                session = session,
                inputId = "file1",
-               choices = input$tdrep$name
+               choices = tdrep_name()
             )
+
+            enable("VTstart")
+            enable("plot_type")
+            enable("downloadReport")
+            enable("downloadPDF")
+            enable("downloadSVG")
+            enable("downloadPNG")
 
          }
       )
 
 
-      # Isolate input params so plot is not created until startButton is clicked
+      # Isolate input params so plot is not created until VTstart is clicked
 
       isolate(input$file1)
       isolate(input$download_font)
@@ -203,205 +281,162 @@ shinyServer(
 
       UpSetPlotExpr <-
          expr(
-            if (input$upset_name == "Protein"){
-               readxl::read_xlsx(
-                  path =
-                     fs::path(
-                        tempdir(),
-                        "protein_results_allhits",
-                        paste0(
-                           fs::path_ext_remove(input$file1), "_allhits"
-                        ),
-                        ext = "xlsx"
-                     )
-               ) %>%
-                  dplyr::select(AccessionNumber, fraction) %>%
-                  dplyr::arrange(fraction) %>%
-                  tidyr::pivot_wider(
-                     names_from = fraction,
-                     values_from = AccessionNumber,
-                     values_fn = list,
-                     names_prefix = "Frac_"
-                  ) %>%
-                  purrr::flatten() %>%
-                  list() %>%
-                  rlang::set_names("1") %>%
-                  make_UpSet_plot(
-                     plotType = input$upset_name,
-                     barColor = input$upset_barcolor
+            {
+               load_UpSet_data <-
+                  reactive(
+                     {
+                        readxl::read_xlsx(
+                           path =
+                              fs::path(
+                                 tempdir(),
+                                 "protein_results_allhits",
+                                 paste0(
+                                    fs::path_ext_remove(input$file1), "_allhits"
+                                 ),
+                                 ext = "xlsx"
+                              )
+                        ) %>%
+                           dplyr::select(
+                              if ((input$upset_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum",
+                              fraction
+                           ) %>%
+                           dplyr::arrange(fraction) %>%
+                           tidyr::pivot_wider(
+                              names_from = fraction,
+                              values_from =
+                                 if ((input$upset_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum",
+                              values_fn = list,
+                              names_prefix = "Frac_"
+                           ) %>%
+                           purrr::flatten() %>%
+                           list() %>%
+                           rlang::set_names("1")
+                     }
                   )
-            } else if (input$upset_name == "Proteoform"){
-               readxl::read_xlsx(
-                  path =
-                     fs::path(
-                        tempdir(),
-                        "protein_results_allhits",
-                        paste0(
-                           fs::path_ext_remove(input$file1), "_allhits"
-                        ),
-                        ext = "xlsx"
-                     )
-               ) %>%
-                  dplyr::select(ProteoformRecordNum, fraction) %>%
-                  dplyr::arrange(fraction) %>%
-                  tidyr::pivot_wider(
-                     names_from = fraction,
-                     values_from = ProteoformRecordNum,
-                     values_fn = list,
-                     names_prefix = "Frac_"
-                  ) %>%
-                  purrr::flatten() %>%
-                  list() %>%
-                  rlang::set_names("1") %>%
-                  make_UpSet_plot(
-                     plotType = input$upset_name,
-                     barColor = input$upset_barcolor
-                  )
+
+               make_UpSet_plot(
+                  load_UpSet_data(),
+                  plotType = isolate(input$upset_name),
+                  barColor = isolate(input$upset_barcolor)
+               )
             }
          )
 
       IntDegPlotExpr <-
          expr(
-            if (input$intdeg_name == "Protein"){
-               readxl::read_xlsx(
-                  path =
-                     fs::path(
-                        tempdir(),
-                        "protein_results_allhits",
-                        paste0(
-                           fs::path_ext_remove(input$file1), "_allhits"
-                        ),
-                        ext = "xlsx"
-                     )
-               ) %>%
-                  dplyr::select(AccessionNumber, fraction) %>%
-                  dplyr::arrange(fraction) %>%
-                  tidyr::pivot_wider(
-                     names_from = fraction,
-                     values_from = AccessionNumber,
-                     values_fn = list,
-                     names_prefix = "Frac_"
-                  ) %>%
-                  purrr::flatten() %>%
-                  purrr::map(
-                     unique
-                  ) %>%
-                  make_intersection_degree_plot(
-                     Yrange = c(0, as.integer(input$intdeg_yrange)),
-                     plotType = input$intdeg_name,
-                     fillColor = input$intdeg_fillcolor,
-                     fontFamily = input$download_font
+            {
+               load_intdeg_data <-
+                  reactive(
+                     {
+
+                        readxl::read_xlsx(
+                           path =
+                              fs::path(
+                                 tempdir(),
+                                 "protein_results_allhits",
+                                 paste0(
+                                    fs::path_ext_remove(input$file1), "_allhits"
+                                 ),
+                                 ext = "xlsx"
+                              )
+                        ) %>%
+                           dplyr::select(
+                              if ((input$intdeg_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum",
+                              fraction
+                           ) %>%
+                           dplyr::arrange(fraction) %>%
+                           tidyr::pivot_wider(
+                              names_from = fraction,
+                              values_from =
+                                 if ((input$intdeg_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum",
+                              values_fn = list,
+                              names_prefix = "Frac_"
+                           ) %>%
+                           purrr::flatten() %>%
+                           purrr::map(unique)
+
+                     }
                   )
-            } else if (input$intdeg_name == "Proteoform"){
-               readxl::read_xlsx(
-                  path =
-                     fs::path(
-                        tempdir(),
-                        "protein_results_allhits",
-                        paste0(
-                           fs::path_ext_remove(input$file1), "_allhits"
-                        ),
-                        ext = "xlsx"
-                     )
-               ) %>%
-                  dplyr::select(ProteoformRecordNum, fraction) %>%
-                  dplyr::arrange(fraction) %>%
-                  tidyr::pivot_wider(
-                     names_from = fraction,
-                     values_from = ProteoformRecordNum,
-                     values_fn = list,
-                     names_prefix = "Frac_"
-                  ) %>%
-                  purrr::flatten() %>%
-                  purrr::map(
-                     unique
-                  ) %>%
-                  make_intersection_degree_plot(
-                     Yrange = c(0, as.integer(input$intdeg_yrange)),
-                     plotType = input$intdeg_name,
-                     fillColor = input$intdeg_fillcolor,
-                     fontFamily = input$download_font
-                  )
+
+               make_intersection_degree_plot(
+                  load_intdeg_data(),
+                  Yrange = c(0, as.integer(isolate(input$intdeg_yrange))),
+                  plotType = isolate(input$intdeg_name),
+                  fillColor = isolate(input$intdeg_fillcolor),
+                  fontFamily = isolate(input$download_font)
+               )
             }
          )
 
       HeatmapPlotExpr <-
          expr(
-            if (input$heatmap_name == "Protein"){
-               readxl::read_xlsx(
-                  path =
-                     fs::path(
-                        tempdir(),
-                        "protein_results_allhits",
-                        paste0(
-                           fs::path_ext_remove(input$file1), "_allhits"
-                        ),
-                        ext = "xlsx"
-                     )
-               ) %>%
-                  dplyr::group_by(AccessionNumber, fraction) %>%
-                  dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
-                  dplyr::filter(`P-score` == min(`P-score`)) %>%
-                  dplyr::filter(`C-score` == max(`C-score`)) %>%
-                  dplyr::ungroup() %>%
-                  viztools::make_heatmap(
-                     plotType = input$heatmap_name,
-                     orientation = input$heatmap_orientation,
-                     binSize = input$heatmap_binsize,
-                     massColname = "ObservedPrecursorMass",
-                     fractionColname = "fraction",
-                     axisRange = input$heatmap_axisrange,
-                     countRange = input$heatmap_countrange,
-                     fontFamily = input$download_font
+            {
+               load_heatmap_data <-
+                  reactive(
+                     {
+                        readxl::read_xlsx(
+                           path =
+                              fs::path(
+                                 tempdir(),
+                                 "protein_results_allhits",
+                                 paste0(
+                                    fs::path_ext_remove(input$file1), "_allhits"
+                                 ),
+                                 ext = "xlsx"
+                              )
+                        ) %>%
+                           dplyr::group_by(
+                              if ((input$heatmap_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum",
+                              fraction) %>%
+                           dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
+                           dplyr::filter(`P-score` == min(`P-score`)) %>%
+                           dplyr::filter(`C-score` == max(`C-score`)) %>%
+                           dplyr::ungroup()
+
+                     }
                   )
-            } else if (input$heatmap_name == "Proteoform"){
-               readxl::read_xlsx(
-                  path =
-                     fs::path(
-                        tempdir(),
-                        "protein_results_allhits",
-                        paste0(
-                           fs::path_ext_remove(input$file1), "_allhits"
-                        ),
-                        ext = "xlsx"
-                     )
-               ) %>%
-                  dplyr::group_by(ProteoformRecordNum, fraction) %>%
-                  dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
-                  dplyr::filter(`P-score` == min(`P-score`)) %>%
-                  dplyr::filter(`C-score` == max(`C-score`)) %>%
-                  dplyr::ungroup() %>%
-                  viztools::make_heatmap(
-                     plotType = input$heatmap_name,
-                     orientation = input$heatmap_orientation,
-                     binSize = input$heatmap_binsize,
-                     massColname = "ObservedPrecursorMass",
-                     fractionColname = "fraction",
-                     axisRange = input$heatmap_axisrange,
-                     countRange = input$heatmap_countrange,
-                     fontFamily = input$download_font
-                  )
+
+               viztools::make_heatmap(
+                  load_heatmap_data(),
+                  plotType = isolate(input$heatmap_name),
+                  orientation = isolate(input$heatmap_orientation),
+                  binSize = isolate(input$heatmap_binsize),
+                  massColname = "ObservedPrecursorMass",
+                  fractionColname = "fraction",
+                  axisRange = isolate(input$heatmap_axisrange),
+                  countRange = isolate(input$heatmap_countrange),
+                  fontFamily = isolate(input$download_font)
+               )
             }
          )
 
       WafflePlotExpr <-
          expr(
-            readxl::read_xlsx(
-               path =
-                  find_newest_file(
-                     fs::path(
-                        tempdir(),
-                        "protein_results_countsbyfraction"
-                     )
+            {
+               load_waffle_data <-
+                  reactive(
+                     {
+                        readxl::read_xlsx(
+                           path =
+                              find_newest_file(
+                                 fs::path(
+                                    tempdir(),
+                                    "protein_results_countsbyfraction"
+                                 )
+                              )
+                        ) %>%
+                           dplyr::filter(tdreport_name == input$file1) %>%
+                           dplyr::select(-tdreport_name, -protein_count)
+                     }
                   )
-            ) %>%
-               dplyr::filter(tdreport_name == input$file1) %>%
-               dplyr::select(-tdreport_name, -protein_count) %>%
+
                viztools::waffle_iron(
+                  load_waffle_data(),
                   fraction_colname = "fraction",
                   waffleType = "Protein",
-                  fontFamily = input$download_font
+                  fontFamily = isolate(input$download_font)
                )
+            }
          )
 
 
@@ -413,9 +448,11 @@ shinyServer(
       )
 
       observeEvent(
-         input$startButton,
+         input$VTstart,
          {
-            req(input$tdrep)
+
+            if (is_local == FALSE) req(input$tdrep)
+            if (is_local == TRUE) req(input$tdrep_local)
 
             output$confirm <-
                NULL
@@ -424,13 +461,12 @@ shinyServer(
                renderPlot(
                   {
                      switch(
-                        input$plot_type,
+                        isolate(input$plot_type),
                         upset = eval(UpSetPlotExpr),
                         intdeg = eval(IntDegPlotExpr),
                         heatmap = eval(HeatmapPlotExpr),
                         waffle = eval(WafflePlotExpr)
                      )
-
                   },
                   width = 800,
                   height=800*(input$download_height/input$download_width)

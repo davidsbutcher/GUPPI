@@ -11,6 +11,8 @@ library(feather)
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
+library(shinyjs)
+library(shinyFiles)
 library(purrr)
 library(readxl)
 library(Peptides)
@@ -39,8 +41,12 @@ library(UniProt.ws)
 library(AnnotationDbi)
 library(writexl)
 library(readxl)
+library(sessioninfo)
+
 
 options(repos = BiocManager::repositories())
+
+is_local <- Sys.getenv('SHINY_PORT') == ""
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
@@ -50,6 +56,11 @@ VT_parameter_tabs <-
     tabsetPanel(
         id = "params",
         type = "hidden",
+        tabPanel(
+            "blank",
+            br(),
+            br()
+        ),
         tabPanel(
             "upset",
             div(
@@ -146,6 +157,8 @@ VT_parameter_tabs <-
 shinyUI(
     fixedPage(
 
+        useShinyjs(),
+
         tags$head(
             tags$style(HTML("hr {border-top: 1px solid #A9A9A9;}"))
         ),
@@ -162,12 +175,26 @@ shinyUI(
                     tabPanel(
                         "GUPPI",
                         hr(),
-                        br(),
-                        fileInput(
-                            "tdrep",
-                            "Upload .tdReport file",
-                            accept = c(".tdReport"),
-                            multiple = TRUE
+                        div(
+                            id = "input_server",
+                            br(),
+                            fileInput(
+                                "tdrep",
+                                "Upload .tdReport file",
+                                accept = c(".tdReport"),
+                                multiple = TRUE
+                            )
+                        ),
+                        div(
+                            id = "input_local",
+                            shinyFilesButton(
+                                "tdrep_local",
+                                "Select .tdReport file(s)",
+                                "Select one or more tdReport files",
+                                multiple = TRUE
+                            ),
+                            br(),
+                            br()
                         ),
                         "NOTE: Large reports can take a long time to upload!",
                         br(), br(),
@@ -203,6 +230,7 @@ shinyUI(
                                     inputId = "plot_type",
                                     "Plot type",
                                     choices = c(
+                                        " " = "blank",
                                         "UpSet" = "upset",
                                         "Int. Degree" = "intdeg",
                                         "Heatmap" = "heatmap",
@@ -213,7 +241,7 @@ shinyUI(
                                 VT_parameter_tabs,
                                 hr(),
                                 actionBttn(
-                                    "startButton",
+                                    "VTstart",
                                     "Update Preview"
                                 ),
                                 br(),
