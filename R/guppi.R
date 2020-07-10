@@ -442,12 +442,17 @@ guppi <-
 
          }
 
-         if (dir.exists(glue::glue("{outputdir}/protein_results")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/protein_results"))
+         if (dir.exists(fs::path(outputdir, "protein_results")) == FALSE) {
+            dir.create(fs::path(outputdir, "protein_results"))
          }
 
          resultsname <-
-            glue::glue("{outputdir}/protein_results/{systime}_protein_results.xlsx")
+            fs::path(
+               outputdir,
+               "protein_results",
+               glue::glue("{systime}_protein_results"),
+               extension = "xlsx"
+            )
 
          message(
             glue::glue("\nSaving protein results to {resultsname}")
@@ -459,15 +464,17 @@ guppi <-
 
          # Protein results, counts by fraction
 
-         if (dir.exists(glue::glue("{outputdir}/protein_results_countsbyfraction")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/protein_results_countsbyfraction"))
+         if (dir.exists(fs::path(outputdir, "protein_results_countsbyfraction")) == FALSE) {
+            dir.create(fs::path(outputdir, "protein_results_countsbyfraction"))
          }
 
          resultsname <-
-            glue::glue(
-               "{outputdir}/protein_results_countsbyfraction/{systime}_protein_countsbyfrac.xlsx"
+            fs::path(
+               outputdir,
+               "protein_results_countsbyfraction",
+               glue::glue("{systime}_protein_results_countsbyfrac"),
+               extension = "xlsx"
             )
-
 
          results_protein_countsbyfraction %>%
             writexl::write_xlsx(path = resultsname)
@@ -476,8 +483,8 @@ guppi <-
          # Protein results, all hits
 
 
-         if (dir.exists(glue::glue("{outputdir}/protein_results_allhits")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/protein_results_allhits"))
+         if (dir.exists(fs::path(outputdir, "protein_results_allhits")) == FALSE) {
+            dir.create(fs::path(outputdir, "protein_results_allhits"))
          }
 
          filelist %>%
@@ -521,19 +528,19 @@ guppi <-
 
          # Just in case you want to see an image from a particular run of results
 
-         if (dir.exists(glue::glue("{outputdir}/workspace_image")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/workspace_image"))
-         }
-
-         rm(UPdatabase)
-
-         save(
-            list = ls(envir = sys.frame(which = 1)),
-            envir = sys.frame(which = 1),
-            file = glue::glue(
-               "{outputdir}/workspace_image/{systime}_workspace_image.RData"
-            )
-         )
+         # if (dir.exists(glue::glue("{outputdir}/workspace_image")) == FALSE) {
+         #    dir.create(glue::glue("{outputdir}/workspace_image"))
+         # }
+         #
+         # rm(UPdatabase)
+         #
+         # save(
+         #    list = ls(envir = sys.frame(which = 1)),
+         #    envir = sys.frame(which = 1),
+         #    file = glue::glue(
+         #       "{outputdir}/workspace_image/{systime}_workspace_image.RData"
+         #    )
+         # )
 
       }
 
