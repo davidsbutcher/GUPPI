@@ -92,3 +92,5 @@ inst/rmd/generate_report.Rmd
 README.Rmd
 
 ignore/
+
+shiny/GUPPI/rsconnect/shinyapps.io/davidbutcher/

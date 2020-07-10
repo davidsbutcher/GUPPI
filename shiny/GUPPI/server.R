@@ -47,6 +47,10 @@ options(repos = BiocManager::repositories())
 
 is_local <- Sys.getenv('SHINY_PORT') == ""
 
+# is_local <- FALSE
+
+options(shiny.maxRequestSize = 1000*1024^2)
+
 find_newest_file <-
    function(
       path
@@ -133,6 +137,8 @@ get_data_path <-
 shinyServer(
    function(input, output, session) {
 
+      options(shiny.maxRequestSize = 1000*1024^2)
+
       if (is_local == TRUE) hide("input_server")
       if (is_local == FALSE) hide("input_local")
 
@@ -189,12 +195,16 @@ shinyServer(
 
          tdrep_path <-
             reactive(
-               input$tdrep$datapath
+               {
+                  input$tdrep$datapath
+               }
             )
 
          tdrep_name <-
             reactive(
-               input$tdrep$name
+               {
+                  input$tdrep$name
+               }
             )
 
       } else if (is_local == TRUE) {
@@ -387,7 +397,8 @@ shinyServer(
                         ) %>%
                            dplyr::group_by(
                               if ((input$heatmap_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum",
-                              fraction) %>%
+                              fraction
+                           ) %>%
                            dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
                            dplyr::filter(`P-score` == min(`P-score`)) %>%
                            dplyr::filter(`C-score` == max(`C-score`)) %>%
