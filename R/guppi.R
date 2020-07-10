@@ -450,8 +450,7 @@ guppi <-
             fs::path(
                outputdir,
                "protein_results",
-               glue::glue("{systime}_protein_results"),
-               extension = "xlsx"
+               glue::glue("{systime}_protein_results.xlsx"),
             )
 
          message(
@@ -472,8 +471,7 @@ guppi <-
             fs::path(
                outputdir,
                "protein_results_countsbyfraction",
-               glue::glue("{systime}_protein_results_countsbyfrac"),
-               extension = "xlsx"
+               glue::glue("{systime}_protein_results_countsbyfrac.xlsx")
             )
 
          results_protein_countsbyfraction %>%
