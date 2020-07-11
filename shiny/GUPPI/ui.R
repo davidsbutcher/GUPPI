@@ -46,8 +46,6 @@ library(sessioninfo)
 
 options(repos = BiocManager::repositories())
 
-# is_local <- Sys.getenv('SHINY_PORT') == ""
-
 options(shiny.maxRequestSize = 1000*1024^2)
 
 # Hidden tabs -------------------------------------------------------------

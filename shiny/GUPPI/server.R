@@ -47,8 +47,6 @@ options(repos = BiocManager::repositories())
 
 is_local <- Sys.getenv('SHINY_PORT') == ""
 
-# is_local <- FALSE
-
 options(shiny.maxRequestSize = 1000*1024^2)
 
 find_newest_file <-
@@ -136,8 +134,6 @@ get_data_path <-
 
 shinyServer(
    function(input, output, session) {
-
-      options(shiny.maxRequestSize = 1000*1024^2)
 
       if (is_local == TRUE) hide("input_server")
       if (is_local == FALSE) hide("input_local")
