@@ -137,6 +137,7 @@ shinyServer(
 
       if (is_local == TRUE) hide("input_server")
       if (is_local == FALSE) hide("input_local")
+      hide("input_VT")
 
       disable("GUPPIstart")
       disable("VTstart")
@@ -261,6 +262,8 @@ shinyServer(
                   }
                )
 
+            shinyjs::show("input_VT")
+
             updateSelectInput(
                session = session,
                inputId = "file1",
@@ -321,7 +324,7 @@ shinyServer(
                   )
 
                make_UpSet_plot(
-                  load_UpSet_data(),
+                  isolate(load_UpSet_data()),
                   plotType = isolate(input$upset_name),
                   barColor = isolate(input$upset_barcolor)
                )
@@ -365,7 +368,7 @@ shinyServer(
                   )
 
                make_intersection_degree_plot(
-                  load_intdeg_data(),
+                  isolate(load_intdeg_data()),
                   Yrange = c(0, as.integer(isolate(input$intdeg_yrange))),
                   plotType = isolate(input$intdeg_name),
                   fillColor = isolate(input$intdeg_fillcolor),
@@ -380,21 +383,58 @@ shinyServer(
                load_heatmap_data <-
                   reactive(
                      {
-                        readxl::read_xlsx(
-                           path =
-                              fs::path(
-                                 tempdir(),
-                                 "protein_results_allhits",
-                                 paste0(
-                                    fs::path_ext_remove(input$file1), "_allhits"
-                                 ),
-                                 ext = "xlsx"
+
+                        # readxl::read_xlsx(
+                        #    path =
+                        #       fs::path(
+                        #          tempdir(),
+                        #          "protein_results_allhits",
+                        #          paste0(
+                        #             fs::path_ext_remove(input$file1), "_allhits"
+                        #          ),
+                        #          ext = "xlsx"
+                        #       )
+                        # ) %>%
+                        #    dplyr::group_by(
+                        #       fraction,
+                        #       if ((input$heatmap_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum"
+                        #    ) %>%
+                        #    dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
+                        #    dplyr::filter(`P-score` == min(`P-score`)) %>%
+                        #    dplyr::filter(`C-score` == max(`C-score`)) %>%
+                        #    dplyr::ungroup()
+
+
+                        allhits_xlsx <-
+                           readxl::read_xlsx(
+                              path =
+                                 fs::path(
+                                    tempdir(),
+                                    "protein_results_allhits",
+                                    paste0(
+                                       fs::path_ext_remove("20190627-28_PEPPI_F01-F06_5mMDTT_10mMIAA.xlsx"), "_allhits"
+                                    ),
+                                    ext = "xlsx"
+                                 )
+                           )
+
+                        if (input$heatmap_name == "Protein") {
+                           allhits_xlsx <-
+                              allhits_xlsx %>%
+                              dplyr::group_by(
+                                 AccessionNumber,
+                                 fraction
                               )
-                        ) %>%
-                           dplyr::group_by(
-                              if ((input$heatmap_name) == "Protein") "AccessionNumber" else "ProteoformRecordNum",
-                              fraction
-                           ) %>%
+                        } else if (input$heatmap_name == "Proteoform"){
+                           allhits_xlsx <-
+                              allhits_xlsx %>%
+                              dplyr::group_by(
+                                 ProteoformRecordNum,
+                                 fraction
+                              )
+                        }
+
+                        allhits_xlsx %>%
                            dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
                            dplyr::filter(`P-score` == min(`P-score`)) %>%
                            dplyr::filter(`C-score` == max(`C-score`)) %>%
@@ -404,7 +444,7 @@ shinyServer(
                   )
 
                viztools::make_heatmap(
-                  load_heatmap_data(),
+                  isolate(load_heatmap_data()),
                   plotType = isolate(input$heatmap_name),
                   orientation = isolate(input$heatmap_orientation),
                   binSize = isolate(input$heatmap_binsize),
@@ -438,7 +478,7 @@ shinyServer(
                   )
 
                viztools::waffle_iron(
-                  load_waffle_data(),
+                  isolate(load_waffle_data()),
                   fraction_colname = "fraction",
                   waffleType = "Protein",
                   fontFamily = isolate(input$download_font)

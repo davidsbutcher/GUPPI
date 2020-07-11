@@ -224,29 +224,31 @@ shinyUI(
                                     "Choose a tdReport",
                                     choices = "Analyze w/ GUPPI first"
                                 ),
-                                selectInput(
-                                    inputId = "plot_type",
-                                    "Plot type",
-                                    choices = c(
-                                        " " = "blank",
-                                        "UpSet" = "upset",
-                                        "Int. Degree" = "intdeg",
-                                        "Heatmap" = "heatmap",
-                                        "Waffle" = "waffle"
-                                    )
-                                ),
-                                hr(),
-                                VT_parameter_tabs,
-                                hr(),
-                                actionBttn(
-                                    "VTstart",
-                                    "Update Preview"
-                                ),
-                                br(),
-                                br(),
-                                downloadButton("downloadPDF", label = "Download PDF"),
-                                downloadButton("downloadSVG", label = "Download SVG"),
-                                downloadButton("downloadPNG", label = "Download PNG")
+                                div(
+                                    id = "input_VT",
+                                    selectInput(
+                                        inputId = "plot_type",
+                                        "Plot type",
+                                        choices = c(
+                                            "UpSet" = "upset",
+                                            "Int. Degree" = "intdeg",
+                                            "Heatmap" = "heatmap",
+                                            "Waffle" = "waffle"
+                                        )
+                                    ),
+                                    hr(),
+                                    VT_parameter_tabs,
+                                    hr(),
+                                    actionBttn(
+                                        "VTstart",
+                                        "Update Preview"
+                                    ),
+                                    br(),
+                                    br(),
+                                    downloadButton("downloadPDF", label = "Download PDF"),
+                                    downloadButton("downloadSVG", label = "Download SVG"),
+                                    downloadButton("downloadPNG", label = "Download PNG")
+                                )
                             ),
                             tabPanel(
                                 "Image Settings",
@@ -297,6 +299,11 @@ shinyUI(
                             )
                         ),
                         width = 4
+                    ),
+                    tabPanel(
+                        "About",
+                        br(),
+                        includeMarkdown("about.md")
                     )
                 )
             ),
