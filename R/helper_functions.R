@@ -4,6 +4,8 @@
 #' @param list A list of strings.
 #' @param allowed_ext Vector of strings containing allowed file extensions.
 #'
+#' @noRd
+#'
 #' @return
 #'
 #' @examples
@@ -42,6 +44,8 @@ kickout <-
 #' @param filedir Directory to search for file
 #' @param filename Filename to get full path for
 #' @param extension Vector of allowed file extensions
+#'
+#' @noRd
 #'
 #' @import magrittr
 #'
@@ -97,6 +101,8 @@ get_data_path <-
 #' @param x Vector
 #' @param n Number of chunks to split into
 #'
+#' @noRd
+#'
 #' @return
 #'
 #' @examples
@@ -109,6 +115,8 @@ chunk2 <- function(x,n) {
 #'
 #' @param tbl
 #' @param filelist
+#'
+#' @noRd
 #'
 #' @return
 #'
@@ -150,6 +158,8 @@ get_GO_terms <-
 #'
 #' @param tbl
 #'
+#' @noRd
+#'
 #' @return
 #'
 #' @examples
@@ -169,6 +179,8 @@ add_GRAVY <- function(tbl) {
 #' add_GRAVY_allhits
 #'
 #' @param tbl
+#'
+#' @noRd
 #'
 #' @return
 #'
@@ -191,6 +203,8 @@ add_GRAVY_allhits <- function(tbl) {
 #'
 #' @param tbl
 #'
+#' @noRd
+#'
 #' @return
 #'
 #' @examples
@@ -211,6 +225,8 @@ add_masses <- function(tbl) {
 #' add_fraction
 #'
 #' @param tbl
+#'
+#' @noRd
 #'
 #' @return
 #'
@@ -240,6 +256,8 @@ add_fraction <- function(tbl) {
 #' get_locations_protein
 #'
 #' @param resultslist
+#'
+#' @noRd
 #'
 #' @return
 #'
@@ -322,6 +340,8 @@ get_locations_protein <- function(resultslist) {
 #'
 #' @param resultslist
 #'
+#' @noRd
+#'
 #' @return
 #' @export
 #'
@@ -402,6 +422,8 @@ get_locations_proteoform <- function(resultslist) {
 #' get_locations_byfraction
 #'
 #' @param resultslist
+#'
+#' @noRd
 #'
 #' @return
 #' @export
@@ -494,6 +516,8 @@ get_locations_byfraction <-
 #' get_locations_byfraction2
 #'
 #' @param resultslist
+#'
+#' @noRd
 #'
 #' @return
 #' @export
@@ -591,6 +615,8 @@ get_locations_byfraction2 <-
 #' coalesce_by_column
 #'
 #' @param df
+#'
+#' @noRd
 #'
 #' @return
 #'
