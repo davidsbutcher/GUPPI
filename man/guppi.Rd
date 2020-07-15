@@ -8,11 +8,13 @@ guppi(
   filedir,
   filename,
   taxon_number,
+  fractionAssignments = NULL,
   outputdir,
   fdr = 0.01,
   saveOutput = TRUE,
   makeDashboard = FALSE,
-  dashboardPath = NULL,
+ 
+    dashboardPath = glue::glue("{outputdir}/report/{format(Sys.time(), '\%Y\%m\%d_\%H\%M\%S')}_dashboard.html"),
   usePB = FALSE
 )
 }

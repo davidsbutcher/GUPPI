@@ -14,6 +14,7 @@ guppi <-
       filedir,
       filename,
       taxon_number,
+      fractionAssignments = NULL,
       outputdir,
       fdr = 0.01,
       saveOutput = TRUE,
@@ -275,7 +276,10 @@ guppi <-
          purrr::map2(filelist, get_GO_terms, go_locs) %>%
          purrr::map(add_GRAVY) %>%
          purrr::map(add_masses) %>%
-         purrr::map(add_fraction)
+         purrr::map(
+            add_fraction,
+            assignments = fractionAssignments
+         )
 
       names(results_protein) <-
          unlist(filelist) %>%
@@ -299,7 +303,10 @@ guppi <-
       results_protein_allhits <-
          proteinlistfull %>%
          purrr::map(add_GRAVY_allhits) %>%
-         purrr::map(add_fraction) %>%
+         purrr::map(
+            add_fraction,
+            assignments = fractionAssignments
+         ) %>%
          purrr::map(parse_mods_allhits, modification = tdreport_mods)
 
       names(results_protein_allhits) <-
@@ -363,7 +370,10 @@ guppi <-
             database = UPdatabase,
             tdrep = TRUE
          ) %>%
-         purrr::map(add_fraction) %>%
+         purrr::map(
+            add_fraction,
+            assignments = fractionAssignments
+         ) %>%
          purrr::map(
             parse_mods,
             modification = tdreport_mods

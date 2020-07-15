@@ -13,6 +13,7 @@ library(shinydashboard)
 library(shinyWidgets)
 library(shinyjs)
 library(shinyFiles)
+library(sortable)
 library(purrr)
 library(readxl)
 library(Peptides)
@@ -196,6 +197,14 @@ shinyUI(
                         ),
                         "NOTE: Large reports can take a long time to upload!",
                         br(), br(),
+                        radioGroupButtons(
+                            inputId = "tdrep_fracs",
+                            label = "Fraction assignment",
+                            choices = c(
+                                "Automatic",
+                                "Manual"
+                            )
+                        ),
                         selectInput(
                             "taxon",
                             "Taxon number",
@@ -313,12 +322,16 @@ shinyUI(
 
             mainPanel(
                 htmlOutput("ULconfirm"),
+                uiOutput(
+                    "tdrep_fracassign"
+                ),
                 br(),
                 textOutput("confirm"),
                 br(),
                 textOutput("error"),
                 br(),
                 plotOutput("outputPlot")
+
             )
         )
     )

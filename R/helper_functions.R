@@ -232,24 +232,42 @@ add_masses <- function(tbl) {
 #'
 #' @examples
 
-add_fraction <- function(tbl) {
+add_fraction <- function(tbl, assignments = NULL) {
 
    # This function attempts to parse the filenames to extract information
    # about the fraction that a raw file corresponds to. This is only useful
    # for GELFrEE/PEPPI/other fractionated data
 
-   message("\nAdding fraction numbers by parsing filenames")
+   if (is.null(assignments) == TRUE) {
 
-   tbl %>%
-      dplyr::mutate(
-         fraction = dplyr::case_when(
-            stringr::str_detect(filename,
-                                "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}") == TRUE ~
-               stringr::str_extract(filename,
-                                    "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}"),
-            TRUE ~ "NA"
+      message("\nAdding fraction numbers by parsing filenames")
+
+      tbl %>%
+         dplyr::mutate(
+            fraction = dplyr::case_when(
+               stringr::str_detect(filename,
+                                   "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}") == TRUE ~
+                  stringr::str_extract(filename,
+                                       "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}"),
+               TRUE ~ "NA"
+            )
          )
-      )
+
+   } else {
+
+      message("\nAdding fraction numbers from filename assignments")
+
+      assign_tbl <-
+         assignments %>%
+         tibble::enframe(
+            name = "fraction",
+            value = "filename"
+         ) %>%
+         tidyr::unnest(cols = c(filename))
+
+      dplyr::left_join(tbl, assign_tbl, by = "filename")
+
+   }
 
 }
 
