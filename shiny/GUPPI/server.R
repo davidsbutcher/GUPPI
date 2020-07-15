@@ -49,7 +49,6 @@ is_local <- Sys.getenv('SHINY_PORT') == ""
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
-
 # Functions ---------------------------------------------------------------
 
 find_newest_file <-
@@ -222,15 +221,11 @@ shinyServer(
          roots = volumes
       )
 
-
       # Code to run after a tdRep is uploaded to the SERVER
 
       observeEvent(
          input$tdrep,
          {
-            validate(
-               need(is.null(input$tdrep_local) == FALSE, "Must upload a tdReport file")
-            )
 
             # Show the names of files that were uploaded
 
@@ -247,8 +242,6 @@ shinyServer(
             output$outputPlot <-
                NULL
 
-            # Show fraction assignment panel if set to manual assignment
-
          }
       )
 
@@ -257,9 +250,6 @@ shinyServer(
       observeEvent(
          input$tdrep_local,
          {
-            validate(
-               need(is.null(input$tdrep_local) == FALSE, "Must upload a tdReport file")
-            )
 
             # Show the names of files that were uploaded
 
@@ -278,84 +268,72 @@ shinyServer(
             output$outputPlot <-
                NULL
 
-            # Show fraction assignment panel if set to manual assignment
-
-            if (input$tdrep_fracs == "Manual" & is.null(input$tdrep_local) == FALSE) {
-
-               output$tdrep_fracassign <-
-                  renderUI(
-                     {
-                        tagList(
-                           bucket_list(
-                              header = c("Drag and drop input files into appropriate fractions"),
-                              group_name = "fraction_bucket_list",
-                              add_rank_list(
-                                 text = "Input files",
-                                 labels =
-                                    unlist(
-                                       map(
-                                          parseFilePaths(volumes, input$tdrep_local)$datapath,
-                                          ~read_tdreport_filenames(.x)
-                                       )
-                                    )
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 1",
-                                 input_id = "frac01"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 2",
-                                 input_id = "frac02"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 3",
-                                 input_id = "frac03"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 4",
-                                 input_id = "frac04"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 5",
-                                 input_id = "frac05"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 6",
-                                 input_id = "frac06"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 7",
-                                 input_id = "frac07"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 8",
-                                 input_id = "frac08"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 9",
-                                 input_id = "frac09"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 10",
-                                 input_id = "frac10"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 11",
-                                 input_id = "frac11"
-                              ),
-                              add_rank_list(
-                                 text = "Fraction 12",
-                                 input_id = "frac12"
-                              )
-                           )
-                        )
-                     }
-
-                  )
-
-            }
          }
       )
+
+
+      input_filenames <-
+         reactive(
+            {
+               unlist(
+                  map(
+                     parseFilePaths(volumes, input$tdrep_local)$datapath,
+                     ~read_tdreport_filenames(.x)
+                  )
+               )
+            }
+         )
+
+
+      input_fracassign_manual <-
+         reactive(
+            {
+               ui_list <- list()
+
+               for (i in seq_along(input_filenames())) {
+
+                  ui_list[[i]] <-
+                     selectInput(
+                        glue("assfrac{i}"),
+                        label = input_filenames()[[i]],
+                        choices = c(1:12),
+                        width = "150px"
+                     )
+               }
+
+               renderUI(
+                  {
+                     tagList(
+                        h3("Choose fraction for each input file"),
+                        ui_list
+                     )
+                  }
+               )
+
+            }
+         )
+
+
+      # Show fraction assignment panel if set to manual assignment
+
+
+      observeEvent(
+         input$tdrep_fracs,
+         if (input$tdrep_fracs == "Manual") {
+
+            output$tdrep_fracassign <-
+               input_fracassign_manual()
+
+         } else if (input$tdrep_fracs == "Automatic") {
+
+            output$tdrep_fracassign <-
+               NULL
+
+         }
+      )
+
+
+      # Create reactive expressions for tdreport path and name
 
       if (is_local == FALSE) {
 
@@ -388,34 +366,32 @@ shinyServer(
       }
 
 
-
       assignments <-
          reactive(
             {
                if (input$tdrep_fracs == "Manual") {
 
-                  list(
-                     "1" = input$frac01,
-                     "2" = input$frac02,
-                     "3" = input$frac03,
-                     "4" = input$frac04,
-                     "5" = input$frac05,
-                     "6" = input$frac06,
-                     "7" = input$frac07,
-                     "8" = input$frac08,
-                     "9" = input$frac09,
-                     "10" = input$frac10,
-                     "11" = input$frac11,
-                     "12" = input$frac12
-                  )
+                  assfrac_list <-
+                     as.list(input_filenames())
+
+                  for (i in seq_along(input_filenames())) {
+
+                     names(assfrac_list)[[i]] <-
+                        eval(parse(text = glue("input$assfrac{i}")))
+
+                  }
+
+                  return(assfrac_list)
 
                } else {
 
-                  assignments <- NULL
+                  return(NULL)
 
                }
             }
          )
+
+
 
       # Push the START button for GUPPI
 
@@ -433,6 +409,11 @@ shinyServer(
                ),
                ~file.rename(.x, .y)
             )
+
+            ass <-
+               assignments()
+
+            print(ass)
 
             GUPPI::guppi(
                dirname(tdrep_path())[[1]],
@@ -595,7 +576,7 @@ shinyServer(
                                     tempdir(),
                                     "protein_results_allhits",
                                     paste0(
-                                       fs::path_ext_remove("20190627-28_PEPPI_F01-F06_5mMDTT_10mMIAA.xlsx"), "_allhits"
+                                       fs::path_ext_remove(input$file1), "_allhits"
                                     ),
                                     ext = "xlsx"
                                  )
@@ -685,6 +666,9 @@ shinyServer(
             if (is_local == TRUE) req(input$tdrep_local)
 
             output$confirm <-
+               NULL
+
+            output$tdrep_fracassign <-
                NULL
 
             output$outputPlot <-

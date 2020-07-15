@@ -159,7 +159,20 @@ shinyUI(
         useShinyjs(),
 
         tags$head(
-            tags$style(HTML("hr {border-top: 1px solid #A9A9A9;}"))
+            tags$style(HTML("hr {border-top: 1px solid #A9A9A9;}")),
+            tags$style(
+                HTML(
+                ".rank-list-container.custom-sortable {
+                    background-color: #6699cc;
+                    overflow-y: scroll;
+                    height: 150px;
+                    width: 150px;
+                 }
+                 .custom-sortable .rank-list-item {
+                    font-size: 0.75em;
+                }"
+                )
+            )
         ),
 
         titlePanel("GUPPI beta shiny app"),
@@ -205,6 +218,7 @@ shinyUI(
                                 "Manual"
                             )
                         ),
+                        br(),
                         selectInput(
                             "taxon",
                             "Taxon number",
