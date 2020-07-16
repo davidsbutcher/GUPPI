@@ -195,7 +195,8 @@ shinyUI(
                                 "Upload .tdReport file",
                                 accept = c(".tdReport"),
                                 multiple = TRUE
-                            )
+                            ),
+                            "NOTE: Large reports can take a long time to upload!"
                         ),
                         div(
                             id = "input_local",
@@ -205,10 +206,8 @@ shinyUI(
                                 "Select one or more tdReport files",
                                 multiple = TRUE
                             ),
-                            br(),
                             br()
                         ),
-                        "NOTE: Large reports can take a long time to upload!",
                         br(), br(),
                         radioGroupButtons(
                             inputId = "tdrep_fracs",

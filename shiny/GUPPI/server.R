@@ -275,12 +275,22 @@ shinyServer(
       input_filenames <-
          reactive(
             {
-               unlist(
-                  map(
-                     parseFilePaths(volumes, input$tdrep_local)$datapath,
-                     ~read_tdreport_filenames(.x)
+               if (is_local == FALSE) {
+                  unlist(
+                     map(
+                        input$tdrep$datapath,
+                        ~read_tdreport_filenames(.x)
+                     )
                   )
-               )
+               } else if (is_local == TRUE){
+                  unlist(
+                     map(
+                        parseFilePaths(volumes, input$tdrep_local)$datapath,
+                        ~read_tdreport_filenames(.x)
+                     )
+                  )
+               }
+
             }
          )
 
