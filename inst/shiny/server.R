@@ -5,15 +5,13 @@ library(viztools)
 library(dplyr)
 library(assertthat)
 library(tictoc)
-library(RPushbullet)
 library(glue)
 library(feather)
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
-library(shinyFiles)
 library(shinyjs)
-library(purrr)
+library(shinyFiles)
 library(readxl)
 library(Peptides)
 library(stringr)
@@ -45,7 +43,7 @@ library(sessioninfo)
 
 options(repos = BiocManager::repositories())
 
-is_local <- Sys.getenv('SHINY_PORT') == ""
+# is_local <- Sys.getenv('SHINY_PORT') == ""
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
@@ -190,14 +188,12 @@ read_tdreport_filenames <-
    }
 
 # Server ------------------------------------------------------------------
-
 shinyServer(
    function(input, output, session) {
 
       # Hide panels which are only shown conditionally
 
-      if (is_local == TRUE) hide("input_server")
-      if (is_local == FALSE) hide("input_local")
+      hide("input_local")
       hide("input_VT")
 
       # Disable buttons which are selectively enabled later
@@ -209,6 +205,36 @@ shinyServer(
       disable("downloadPDF")
       disable("downloadSVG")
       disable("downloadPNG")
+
+
+      # Create reactive expression to determine whether file is on local filesystem
+      # depends on input$tdrep_fileinput buttons
+
+      is_local <-
+         reactive(
+            {
+
+               switch (
+                  input$tdrep_fileinput,
+                  Upload = return(FALSE),
+                  `Local Filesystem` = return(TRUE)
+               )
+
+            }
+         )
+
+      observeEvent(
+         input$tdrep_fileinput,
+         {
+            if (is_local() == FALSE) {
+               hide("input_local")
+               shinyjs::show("input_server")
+            } else if (is_local() == TRUE) {
+               hide("input_server")
+               shinyjs::show("input_local")
+            }
+         }
+      )
 
       # Establish params to use for shinyFiles input (local only)
 
@@ -275,14 +301,14 @@ shinyServer(
       input_filenames <-
          reactive(
             {
-               if (is_local == FALSE) {
+               if (is_local() == FALSE) {
                   unlist(
                      map(
                         input$tdrep$datapath,
                         ~read_tdreport_filenames(.x)
                      )
                   )
-               } else if (is_local == TRUE){
+               } else if (is_local() == TRUE){
                   unlist(
                      map(
                         parseFilePaths(volumes, input$tdrep_local)$datapath,
@@ -345,35 +371,27 @@ shinyServer(
 
       # Create reactive expressions for tdreport path and name
 
-      if (is_local == FALSE) {
-
-         tdrep_path <-
-            reactive(
-               {
+      tdrep_path <-
+         reactive(
+            {
+               if (is_local() == FALSE) {
                   input$tdrep$datapath
+               } else if (is_local() == TRUE) {
+                  parseFilePaths(volumes, input$tdrep_local)$datapath
                }
-            )
+            }
+         )
 
-         tdrep_name <-
-            reactive(
-               {
+      tdrep_name <-
+         reactive(
+            {
+               if (is_local() == FALSE) {
                   input$tdrep$name
+               } else if (is_local() == TRUE) {
+                  parseFilePaths(volumes, input$tdrep_local)$name
                }
-            )
-
-      } else if (is_local == TRUE) {
-
-         tdrep_path <-
-            reactive(
-               parseFilePaths(volumes, input$tdrep_local)$datapath
-            )
-
-         tdrep_name <-
-            reactive(
-               parseFilePaths(volumes, input$tdrep_local)$name
-            )
-
-      }
+            }
+         )
 
 
       assignments <-
@@ -672,8 +690,8 @@ shinyServer(
          input$VTstart,
          {
 
-            if (is_local == FALSE) req(input$tdrep)
-            if (is_local == TRUE) req(input$tdrep_local)
+            if (is_local() == FALSE) req(input$tdrep)
+            if (is_local() == TRUE) req(input$tdrep_local)
 
             output$confirm <-
                NULL

@@ -5,7 +5,6 @@ library(viztools)
 library(dplyr)
 library(assertthat)
 library(tictoc)
-library(RPushbullet)
 library(glue)
 library(feather)
 library(shiny)
@@ -13,7 +12,6 @@ library(shinydashboard)
 library(shinyWidgets)
 library(shinyjs)
 library(shinyFiles)
-library(sortable)
 library(purrr)
 library(readxl)
 library(Peptides)
@@ -187,9 +185,17 @@ shinyUI(
                     tabPanel(
                         "GUPPI",
                         hr(),
+                        radioGroupButtons(
+                            inputId = "tdrep_fileinput",
+                            label = "File location",
+                            choices = c(
+                                "Upload",
+                                "Local Filesystem"
+                            )
+                        ),
+                        br(),
                         div(
                             id = "input_server",
-                            br(),
                             fileInput(
                                 "tdrep",
                                 "Upload .tdReport file",

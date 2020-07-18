@@ -1,0 +1,12 @@
+name: GUPPI
+title: GUPPI
+username:
+account: davidbutcher
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2539269
+bundleId: 3396784
+url: https://davidsbutcher.shinyapps.io/GUPPI/
+when: 1594843207.5521
+asMultiple: FALSE
+asStatic: FALSE
