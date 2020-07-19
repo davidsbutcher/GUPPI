@@ -354,7 +354,11 @@ shinyServer(
 
 
       observeEvent(
-         input$tdrep_fracs,
+         {
+            input$tdrep_fracs
+            input$tdrep
+            input$tdrep_local
+         },
          if (input$tdrep_fracs == "Manual") {
 
             output$tdrep_fracassign <-
@@ -426,70 +430,79 @@ shinyServer(
       observeEvent(
          input$GUPPIstart,
          {
-            outputDir <- tempdir()
-            tempReport <- tempfile(fileext = ".html", tmpdir = outputDir)
 
-            purrr::map2_chr(
-               tdrep_path(),
-               fs::path(
-                  dirname(tdrep_path()),
-                  tdrep_name()
-               ),
-               ~file.rename(.x, .y)
+            withProgress(
+               message = "Analyzing tdReport, please wait...",
+               value = 0,
+               style = getShinyOption("progress.style", default = "notification"),
+               {
+                  outputDir <- tempdir()
+                  tempReport <- tempfile(fileext = ".html", tmpdir = outputDir)
+
+                  purrr::map2_chr(
+                     tdrep_path(),
+                     fs::path(
+                        dirname(tdrep_path()),
+                        tdrep_name()
+                     ),
+                     ~file.rename(.x, .y)
+                  )
+
+                  setProgress(value = 0.5)
+
+                  GUPPI::guppi(
+                     dirname(tdrep_path())[[1]],
+                     tdrep_name(),
+                     as.integer(input$taxon),
+                     fractionAssignments = assignments(),
+                     outputdir = outputDir,
+                     fdr = 0.01,
+                     makeDashboard = T,
+                     dashboardPath = tempReport,
+                     saveOutput = T,
+                     usePB = F
+                  )
+
+                  setProgress(value = 0.75)
+
+                  output$downloadReport <-
+                     downloadHandler(
+                        filename = glue::glue(
+                           "{format(Sys.time(), '%Y%m%d_%H%M%S')}_GUPPI_report.html"
+                        ),
+                        content = function(file) {
+                           file.copy(tempReport, file)
+                        }
+                     )
+
+                  output$confirm <-
+                     renderText(
+                        {
+                           "tdReport analyzed succesfully"
+                        }
+                     )
+
+                  shinyjs::show("input_VT")
+
+                  updateSelectInput(
+                     session = session,
+                     inputId = "file1",
+                     choices = tdrep_name()
+                  )
+
+                  output$tdrep_fracassign <- NULL
+
+                  enable("VTstart")
+                  enable("plot_type")
+                  enable("downloadReport")
+                  enable("downloadPDF")
+                  enable("downloadSVG")
+                  enable("downloadPNG")
+
+                  setProgress(value = 1)
+
+               }
             )
-
-            ass <-
-               assignments()
-
-            print(ass)
-
-            GUPPI::guppi(
-               dirname(tdrep_path())[[1]],
-               tdrep_name(),
-               as.integer(input$taxon),
-               fractionAssignments = assignments(),
-               outputdir = outputDir,
-               fdr = 0.01,
-               makeDashboard = T,
-               dashboardPath = tempReport,
-               saveOutput = T,
-               usePB = F
-            )
-
-            output$downloadReport <-
-               downloadHandler(
-                  filename = glue::glue(
-                     "{format(Sys.time(), '%Y%m%d_%H%M%S')}_GUPPI_report.html"
-                  ),
-                  content = function(file) {
-                     file.copy(tempReport, file)
-                  }
-               )
-
-            output$confirm <-
-               renderText(
-                  {
-                     "tdReport analyzed succesfully"
-                  }
-               )
-
-            shinyjs::show("input_VT")
-
-            updateSelectInput(
-               session = session,
-               inputId = "file1",
-               choices = tdrep_name()
-            )
-
-            output$tdrep_fracassign <- NULL
-
-            enable("VTstart")
-            enable("plot_type")
-            enable("downloadReport")
-            enable("downloadPDF")
-            enable("downloadSVG")
-            enable("downloadPNG")
-
          }
       )
 

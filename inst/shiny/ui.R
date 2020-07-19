@@ -160,7 +160,7 @@ shinyUI(
             tags$style(HTML("hr {border-top: 1px solid #A9A9A9;}")),
             tags$style(
                 HTML(
-                ".rank-list-container.custom-sortable {
+                    ".rank-list-container.custom-sortable {
                     background-color: #6699cc;
                     overflow-y: scroll;
                     height: 150px;
@@ -169,6 +169,15 @@ shinyUI(
                  .custom-sortable .rank-list-item {
                     font-size: 0.75em;
                 }"
+                )
+            ),
+            tags$style(
+                HTML(
+                    ".shiny-notification {
+                        position:fixed;
+                        top: calc(15%);
+                        left: calc(40%);
+                    }"
                 )
             )
         ),
@@ -185,62 +194,77 @@ shinyUI(
                     tabPanel(
                         "GUPPI",
                         hr(),
-                        radioGroupButtons(
-                            inputId = "tdrep_fileinput",
-                            label = "File location",
-                            choices = c(
-                                "Upload",
-                                "Local Filesystem"
-                            )
-                        ),
-                        br(),
-                        div(
-                            id = "input_server",
-                            fileInput(
-                                "tdrep",
-                                "Upload .tdReport file",
-                                accept = c(".tdReport"),
-                                multiple = TRUE
+                        tabsetPanel(
+                            id = "guppipanel",
+                            type = "tabs",
+                            tabPanel(
+                                "Upload File",
+                                br(),
+                                div(
+                                    id = "input_server",
+                                    fileInput(
+                                        "tdrep",
+                                        "Upload .tdReport file",
+                                        accept = c(".tdReport"),
+                                        multiple = TRUE
+                                    ),
+                                    "WARNING: Large reports can take a long time to upload!"
+                                ),
+                                div(
+                                    id = "input_local",
+                                    shinyFilesButton(
+                                        "tdrep_local",
+                                        "Select .tdReport file(s)",
+                                        "Select one or more tdReport files",
+                                        multiple = TRUE
+                                    ),
+                                    br()
+                                ),
+                                br(),
+                                selectInput(
+                                    "taxon",
+                                    "Taxon number",
+                                    choices =
+                                        c(
+                                            "83333 (E. coli K12)" = 83333,
+                                            "2097 (Human)" = 2097,
+                                            "6239 (C. elegans)" = 6239
+                                        )
+                                ),
+                                br(),
+                                actionButton(
+                                    "GUPPIstart",
+                                    "Analyze tdReport"
+                                ),
+                                br(), br(),
+                                downloadButton("downloadReport", label = "Download Report")
                             ),
-                            "NOTE: Large reports can take a long time to upload!"
-                        ),
-                        div(
-                            id = "input_local",
-                            shinyFilesButton(
-                                "tdrep_local",
-                                "Select .tdReport file(s)",
-                                "Select one or more tdReport files",
-                                multiple = TRUE
-                            ),
-                            br()
-                        ),
-                        br(), br(),
-                        radioGroupButtons(
-                            inputId = "tdrep_fracs",
-                            label = "Fraction assignment",
-                            choices = c(
-                                "Automatic",
-                                "Manual"
+                            tabPanel(
+                                "Advanced",
+                                br(),
+                                radioGroupButtons(
+                                    inputId = "tdrep_fileinput",
+                                    label = "File location",
+                                    choices = c(
+                                        "Upload",
+                                        "Local Filesystem"
+                                    )
+                                ),
+                                br(),
+                                radioGroupButtons(
+                                    inputId = "tdrep_fracs",
+                                    label = "Fraction assignment",
+                                    choices = c(
+                                        "Automatic",
+                                        "Manual"
+                                    )
+                                )
                             )
-                        ),
-                        br(),
-                        selectInput(
-                            "taxon",
-                            "Taxon number",
-                            choices = c("83333","2097","6239")
-                        ),
-                        br(),
-                        actionButton(
-                            "GUPPIstart",
-                            "Analyze tdReport"
-                        ),
-                        br(), br(),
-                        downloadButton("downloadReport", label = "Download Report")
+                        )
                     ),
                     tabPanel(
                         "viztools",
                         hr(),
-                        br(),
                         tabsetPanel(
                             id = "viztoolspanel",
                             type = "tabs",
@@ -330,7 +354,7 @@ shinyUI(
                     ),
                     tabPanel(
                         "About",
-                        br(),
+                        hr(),
                         includeMarkdown("about.md")
                     )
                 )
