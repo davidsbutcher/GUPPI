@@ -19,8 +19,9 @@ guppi <-
       fdr = 0.01,
       saveOutput = TRUE,
       makeDashboard = FALSE,
-      dashboardPath = glue::glue("{outputdir}/report/{format(Sys.time(), '%Y%m%d_%H%M%S')}_dashboard.html"),
-      usePB = FALSE
+      dashboardPath = glue::glue(
+         "{outputdir}/report/{format(Sys.time(), '%Y%m%d_%H%M%S')}_dashboard.html"
+      )
    ) {
 
       # Assertions --------------------------------------------------------------
@@ -58,14 +59,7 @@ guppi <-
          msg = "makeDashboard should be TRUE or FALSE"
       )
 
-      assertthat::assert_that(
-         assertthat::is.flag(usePB),
-         msg = "usePB should be TRUE or FALSE"
-      )
-
       # Get path to data file ---------------------------------------------------
-
-      tictoc::tic()
 
       filelist <-
          get_data_path(
@@ -214,34 +208,6 @@ guppi <-
                read_tdreport_protein_full,
                fdr_cutoff = fdr
             )
-
-         # message("\nReading full protein data with spectra from tdReport")
-         #
-         # proteinlistwithspectra <-
-         #    filelist %>%
-         #    future_map2(
-         #       proteinlistfull,
-         #       read_tdreport_withspectra,
-         #       fdr_cutoff = fdr
-         #    )
-         #
-         # message("\nReading protein data by file name from tdReport")
-         #
-         # proteinlistbyfilename <-
-         #    filelist %>%
-         #    future_map(
-         #       read_tdreport_byfilename,
-         #       fdr_cutoff = fdr
-         #    )
-         #
-         # message("\nAttempting to read protein data by fraction from tdReport")
-         #
-         # proteinlistbyfraction <-
-         #    filelist %>%
-         #    future_map(
-         #       read_tdreport_byfraction,
-         #       fdr_cutoff = fdr
-         #    )
 
          proteoformlist <-
             filelist %>%
@@ -527,24 +493,6 @@ guppi <-
             writexl::write_xlsx(path = resultsname)
 
 
-         # Save Workspace ---------------------------------------------------------
-
-         # Just in case you want to see an image from a particular run of results
-
-         # if (dir.exists(glue::glue("{outputdir}/workspace_image")) == FALSE) {
-         #    dir.create(glue::glue("{outputdir}/workspace_image"))
-         # }
-         #
-         # rm(UPdatabase)
-         #
-         # save(
-         #    list = ls(envir = sys.frame(which = 1)),
-         #    envir = sys.frame(which = 1),
-         #    file = glue::glue(
-         #       "{outputdir}/workspace_image/{systime}_workspace_image.RData"
-         #    )
-         # )
-
       }
 
       # Make Dashboard ----------------------------------------------------------
@@ -645,18 +593,6 @@ guppi <-
             round(digits = 2)
 
          message(paste0("\nElapsed time: ", totaltime, " min"))
-
-         # Optional line used to contact any Pushbullet enabled device.
-         # View ?pbSetup for help
-
-         if (usePB == TRUE) {
-
-            RPushbullet::pbPost(
-               "note", "GUPPI Analysis Finished",
-               paste0("Elapsed time: ", totaltime, " min \nOutput Dir: ", outputdir)
-            )
-
-         }
 
          # Save Session Info ------------------------------------------------------
 
