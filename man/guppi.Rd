@@ -14,8 +14,7 @@ guppi(
   saveOutput = TRUE,
   makeDashboard = FALSE,
  
-    dashboardPath = glue::glue("{outputdir}/report/{format(Sys.time(), '\%Y\%m\%d_\%H\%M\%S')}_dashboard.html"),
-  usePB = FALSE
+    dashboardPath = glue::glue("{outputdir}/report/{format(Sys.time(), '\%Y\%m\%d_\%H\%M\%S')}_dashboard.html")
 )
 }
 \value{
