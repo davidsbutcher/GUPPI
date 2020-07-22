@@ -1,3 +1,6 @@
+# DOCKERFILE for GUPPI
+# github.com/davidsbutcher/guppi
+
 # get shiny serves plus tidyverse packages image
 FROM rocker/shiny-verse:latest
 
@@ -12,7 +15,7 @@ RUN R -e "install.packages('magrittr', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('assertthat', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('tictoc', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('glue', repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('feather', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('arrow', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('shiny', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('shinydashboard', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('shinyWidgets', repos='http://cran.rstudio.com/')"

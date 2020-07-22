@@ -153,36 +153,31 @@ VT_parameter_tabs <-
 
 shinyUI(
     fixedPage(
+        titlePanel("GUPPI beta shiny app"),
+
+        #theme = "maglab_theme.css",
+        #theme = "spacelab.min.css",
 
         useShinyjs(),
+
+        setBackgroundColor(
+            color = c("#F7FBFF", "#2171B5"),
+            gradient = "linear",
+            direction = "bottom"
+        ),
 
         tags$head(
             tags$style(HTML("hr {border-top: 1px solid #A9A9A9;}")),
             tags$style(
                 HTML(
-                    ".rank-list-container.custom-sortable {
-                    background-color: #6699cc;
-                    overflow-y: scroll;
-                    height: 150px;
-                    width: 150px;
-                 }
-                 .custom-sortable .rank-list-item {
-                    font-size: 0.75em;
-                }"
-                )
-            ),
-            tags$style(
-                HTML(
                     ".shiny-notification {
                         position:fixed;
-                        top: calc(15%);
+                        top: calc(20%);
                         left: calc(40%);
                     }"
                 )
             )
         ),
-
-        titlePanel("GUPPI beta shiny app"),
 
         # SIDEBAR
 
@@ -227,8 +222,11 @@ shinyUI(
                                     choices =
                                         c(
                                             "83333 (E. coli K12)" = 83333,
-                                            "2097 (Human)" = 2097,
-                                            "6239 (C. elegans)" = 6239
+                                            "4932 (S. cerevisae)" = 4932,
+                                            "2097 (M. genitalium)" = 2097,
+                                            "6239 (C. elegans)" = 6239,
+                                            "9606 (Homo sapiens)" = 9606,
+                                            "10090 (Mus musculus)" = 10090
                                         )
                                 ),
                                 br(),

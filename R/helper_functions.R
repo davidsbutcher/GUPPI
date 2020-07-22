@@ -245,10 +245,14 @@ add_fraction <- function(tbl, assignments = NULL) {
       tbl %>%
          dplyr::mutate(
             fraction = dplyr::case_when(
-               stringr::str_detect(filename,
-                                   "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}") == TRUE ~
-                  stringr::str_extract(filename,
-                                       "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}"),
+               stringr::str_detect(
+                  filename,
+                  "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}"
+               ) == TRUE ~
+                  stringr::str_extract(
+                     filename,
+                     "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}"
+                  ),
                TRUE ~ "NA"
             )
          )

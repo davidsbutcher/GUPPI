@@ -68,34 +68,20 @@ guppi <-
             tools::file_ext(filename)
          )
 
-      # Make future workers -----------------------------------------------------
-
-      # Need to run this command for furrr. If 8 is too many sessions for your
-      # system try 5. If running <8 files, change workers to be equal to number
-      # of files. workers = 1 is equivalent to not using furrr at all
-
-      # if (length(filelist) >= max_workers) {
-      #
-      #    # future::plan(future::multisession(workers = as.integer(max_workers)))
-      #    future::plan(future::multisession(workers = 8L))
-      #
-      # } else {
-      #
-      #    # future::plan(future::multisession(workers = as.integer(length(filelist))))
-      #    future::plan(future::multisession(workers = 8L))
-      #
-      # }
-
-
       # Load input files --------------------------------------------------------
 
-      ## check for predownloaded UP database
+      # Start timer
+
+      tictoc::tic()
+
+      # Check for predownloaded UP database
 
       if (
          file.exists(
             system.file(
                "extdata",
-               paste0(taxon_number, "_full_UniProt_database.feather"),
+               "UPdatabase",
+               paste0(taxon_number, "_full_UniProt_database.gz.parquet"),
                package = "GUPPI"
             )
          )
@@ -108,10 +94,11 @@ guppi <-
          )
 
          UPdatabase <-
-            feather::read_feather(
+            arrow::read_parquet(
                system.file(
                   "extdata",
-                  paste0(taxon_number, "_full_UniProt_database.feather"),
+                  "UPdatabase",
+                  paste0(taxon_number, "_full_UniProt_database.gz.parquet"),
                   package = "GUPPI"
                )
             )
@@ -139,7 +126,7 @@ guppi <-
       # (sourced from UniMod, PSI-MOD, etc.)
 
       tdreport_mods <-
-         feather::read_feather(
+         arrow::read_feather(
             system.file(
                "extdata",
                "tdreport_mods_table.feather",

@@ -1,0 +1,301 @@
+GO_ID,GO_term
+GO:0016020,membrane
+GO:0016021,integral component of membrane
+GO:0005737,nucleus
+GO:0005886,mitochondrial inner membrane
+GO:0005840,mitochondrion
+GO:0003735,cytoplasm
+GO:0000160,respirasome
+GO:0009279,chloroplast
+GO:0042597,ribosome
+GO:0000155,plasma membrane
+GO:0043190,structural constituent of ribosome
+GO:0005887,plastid
+GO:0005576,extracellular region
+GO:0009288,chloroplast thylakoid membrane
+GO:0009425,endoplasmic reticulum
+GO:0019867,cytoskeleton
+GO:0045261,nucleolus
+GO:0006605,endoplasmic reticulum membrane
+GO:0015934,Golgi apparatus
+GO:0045263,thylakoid
+GO:0030288,cytosol
+GO:0015935,"DNA-binding transcription factor activity, RNA polymerase II-specific"
+GO:1990077,microtubule
+GO:0005694,intracellular protein transport
+GO:0065002,photosystem II
+GO:0009289,nucleoplasm
+GO:0006886,chromosome
+GO:0005618,Golgi membrane
+GO:0070469,extracellular space
+GO:0015627,intracellular signal transduction
+GO:0009360,"proton-transporting ATP synthase complex, coupling factor F(o)"
+GO:0009380,U4/U6 x U5 tri-snRNP complex
+GO:0032153,nucleosome
+GO:0009295,mitochondrial membrane
+GO:0009986,cell junction
+GO:0005829,endosome
+GO:0009331,integral component of plasma membrane
+GO:0009317,synapse
+GO:0042651,cell wall
+GO:0046930,U6 snRNP
+GO:0006614,cytoplasmic vesicle
+GO:0035556,myosin complex
+GO:0033281,thylakoid membrane
+GO:0009424,peroxisome
+GO:0009376,proteasome complex
+GO:0070069,spliceosomal complex
+GO:0048500,cell projection
+GO:0000156,nuclear pore
+GO:0009318,respiratory chain complex III
+GO:1990904,photosystem I
+GO:0006612,"proton-transporting ATP synthase complex, catalytic core F(1)"
+GO:0030694,mitochondrial outer membrane
+GO:0009579,small ribosomal subunit
+GO:0030680,postsynaptic membrane
+GO:0009898,"mitochondrial electron transport, NADH to ubiquinone"
+GO:0019028,apoplast
+GO:0000015,mitochondrial matrix
+GO:0030089,small GTPase mediated signal transduction
+GO:0033177,photosystem II reaction center
+GO:0009420,intracellular membrane-bounded organelle
+GO:0009341,lysosome
+GO:0009379,endosome membrane
+GO:0031226,MHC class II protein complex
+GO:0009349,structural constituent of cytoskeleton
+GO:0005960,cilium
+GO:0009358,large ribosomal subunit
+GO:0006617,mediator complex
+GO:0048501,bicellular tight junction
+GO:0032300,eukaryotic translation initiation factor 3 complex
+GO:0043590,endoplasmic reticulum to Golgi vesicle-mediated transport
+GO:0000502,"chromosome, centromeric region"
+GO:0031411,cellular_component
+GO:0019008,respiratory chain complex IV
+GO:0009274,host cell nucleus
+GO:0005839,"signal recognition particle, endoplasmic reticulum targeting"
+GO:0030257,MAPK cascade
+GO:0030956,"chromosome, telomeric region"
+GO:0045239,chloroplast stroma
+GO:0005615,microtubule organizing center
+GO:0009325,vacuole
+GO:0009316,clathrin-coated pit
+GO:0019012,centrosome
+GO:0045254,gap junction
+GO:0098015,phosphorelay signal transduction system
+GO:0009426,dynein complex
+GO:0019897,cell surface
+GO:0009276,perinuclear region of cytoplasm
+GO:0009523,proteasome core complex
+GO:0009338,lysosomal membrane
+GO:0009431,exocyst
+GO:0009326,vacuolar membrane
+GO:0043231,kinetochore
+GO:0030430,MAP kinase activity
+GO:0045252,intermediate filament
+GO:0019932,anchored component of membrane
+GO:0008076,membrane coat
+GO:0009421,U1 snRNP
+GO:0005575,"proteasome core complex, alpha-subunit complex"
+GO:0030076,spindle
+GO:0045281,mitochondrial intermembrane space
+GO:0045278,protein import into nucleus
+GO:0005773,transcription regulator complex
+GO:0009428,ribonucleoprotein complex
+GO:0009427,structural constituent of nuclear pore
+GO:0030256,nuclear speck
+GO:0033573,"DNA-binding transcription activator activity, RNA polymerase II-specific"
+GO:0031317,actin cytoskeleton
+GO:0030077,"mitochondrial proton-transporting ATP synthase complex, coupling factor F(o)"
+GO:0009346,nuclear membrane
+GO:0009536,integral component of endoplasmic reticulum membrane
+GO:0009522,peroxisomal membrane
+GO:0005835,motile cilium
+GO:0030428,protein-containing complex
+GO:0009375,nucleocytoplasmic transport
+GO:0031515,early endosome
+GO:0031012,viral nucleocapsid
+GO:0055052,"SRP-dependent cotranslational protein targeting to membrane, signal sequence recognition"
+GO:0045275,protein phosphatase type 2A complex
+GO:0044384,condensed chromosome kinetochore
+GO:0019773,dendrite
+GO:0009366,axon
+GO:0045277,trans-Golgi network
+GO:0043684,cytoplasmic vesicle membrane
+GO:0005971,endoplasmic reticulum lumen
+GO:0033179,nuclear chromatin
+GO:0019866,Arp2/3 protein complex
+GO:0012506,small-subunit processome
+GO:0009507,eukaryotic 43S preinitiation complex
+GO:0020002,calcium-mediated signaling
+GO:0031469,focal adhesion
+GO:1902560,COP9 signalosome
+GO:0005856,COPI vesicle coat
+GO:0033644,neuron projection
+GO:0042601,P-body
+GO:0009337,eukaryotic 48S preinitiation complex
+GO:0031235,"retrograde transport, endosome to Golgi"
+GO:0005811,clathrin adaptor complex
+GO:0036125,cytosolic large ribosomal subunit
+GO:0009347,spindle pole
+GO:0033172,U2 snRNP
+GO:0055040,voltage-gated potassium channel complex
+GO:0046907,chloroplast inner membrane
+GO:0016612,cytochrome b6f complex
+GO:0005874,Ino80 complex
+GO:0005777,collagen trimer
+GO:0008305,transcription factor TFIID complex
+GO:0030964,SRP-dependent cotranslational protein targeting to membrane
+GO:0031241,phosphatidylinositol-mediated signaling
+GO:0009539,basement membrane
+GO:0031234,apical plasma membrane
+GO:0030894,extracellular matrix
+GO:0030054,exosome (RNase complex)
+GO:0005940,lamellipodium
+GO:0031410,anaphase-promoting complex
+GO:0045284,MCM complex
+GO:0033104,mRNA export from nucleus
+GO:0009339,Golgi cisterna membrane
+GO:0019898,chloride channel complex
+GO:0005871,clathrin-coated vesicle
+GO:0019031,late endosome membrane
+GO:0019774,RNA polymerase III complex
+GO:0033178,lipid droplet
+GO:0009654,early endosome membrane
+GO:0000786,nuclear receptor activity
+GO:0009538,chemical synaptic transmission
+GO:0019013,excitatory postsynaptic potential
+GO:0009521,SAGA complex
+GO:0031977,phosphorelay sensor kinase activity
+GO:0017122,mitochondrial translation
+GO:0042717,centriole
+GO:1990195,photosystem
+GO:0009323,NuA4 histone acetyltransferase complex
+GO:0030700,"proton-transporting V-type ATPase, V0 domain"
+GO:0110001,"proton-transporting two-sector ATPase complex, proton-transporting domain"
+GO:0005727,nuclear envelope
+GO:0031160,nuclear body
+GO:0009512,collagen-containing extracellular matrix
+GO:0031224,prefoldin complex
+GO:0036406,CCR4-NOT complex
+GO:0031975,COPII vesicle coat
+GO:0032993,voltage-gated calcium channel complex
+GO:0022625,plastid inner membrane
+GO:0034707,late endosome
+GO:0044161,external side of plasma membrane
+GO:0007264,U5 snRNP
+GO:0030115,Golgi transport complex
+GO:0022627,"DNA-binding transcription repressor activity, RNA polymerase II-specific"
+GO:0043592,membrane raft
+GO:0031361,ER to Golgi transport vesicle membrane
+GO:0005923,adherens junction
+GO:0042025,GPI-anchor transamidase complex
+GO:0005199,presynapse
+GO:0006888,COPI-coated vesicle membrane
+GO:0030127,endomembrane system
+GO:0005739,microtubule cytoskeleton
+GO:0055087,cell cortex
+GO:0005201,glycerol-3-phosphate dehydrogenase complex
+GO:0031090,Smc5-Smc6 complex
+GO:0036386,Set1C/COMPASS complex
+GO:0016328,midbody
+GO:0042147,organelle membrane
+GO:0030904,TRAPP complex
+GO:0043230,cytosolic small ribosomal subunit
+GO:0045272,U4 snRNP
+GO:0006913,plasmodesma
+GO:0017056,oligosaccharyltransferase complex
+GO:0097311,integrin complex
+GO:0006406,ubiquitin ligase complex
+GO:1990281,mismatch repair complex
+GO:0110146,chromatin
+GO:0031230,protein import into mitochondrial matrix
+GO:0015629,voltage-gated sodium channel complex
+GO:0030915,cell-cell junction
+GO:0031463,chloroplast envelope
+GO:0110143,extracellular matrix structural constituent
+GO:0042995,transcription factor TFIIH core complex
+GO:0000981,synaptic vesicle
+GO:0045202,mitochondrial large ribosomal subunit
+GO:0098797,basolateral plasma membrane
+GO:0046858,mitotic spindle
+GO:0043657,CCR4-NOT core complex
+GO:0005882,SWI/SNF complex
+GO:0007234,integral component of Golgi membrane
+GO:0000178,signal recognition particle
+GO:0033105,integral component of peroxisomal membrane
+GO:0000151,"preribosome, large subunit precursor"
+GO:0000165,Elongator holoenzyme complex
+GO:0044165,anchored component of plasma membrane
+GO:0008278,kinesin complex
+GO:0031522,extrinsic component of membrane
+GO:0005948,neuronal cell body
+GO:0033202,sarcolemma
+GO:0009330,caveola
+GO:0000775,ciliary basal body
+GO:0031929,histone acetyltransferase complex
+GO:0031932,acetylcholine-gated cation-selective channel activity
+GO:0016272,F-actin capping protein complex
+GO:0007268,"proton-transporting V-type ATPase, V1 domain"
+GO:0016459,integral component of mitochondrial inner membrane
+GO:0031588,mitochondrial cytochrome c oxidase assembly
+GO:0044776,MICOS complex
+GO:0031931,postsynaptic density
+GO:0030117,ESCRT I complex
+GO:0005764,recycling endosome
+GO:0032991,MAP kinase kinase kinase activity
+GO:0043113,SCF ubiquitin ligase complex
+GO:0005200,MLL1 complex
+GO:0007213,ER membrane protein complex
+GO:0009368,TIM23 mitochondrial import inner membrane translocase complex
+GO:0000408,protein kinase CK2 complex
+GO:1990220,small nucleolar ribonucleoprotein complex
+GO:0030286,"proteasome regulatory particle, base subcomplex"
+GO:0032299,ruffle
+GO:0030663,phagophore assembly site membrane
+GO:0071575,"RNA polymerase II, core complex"
+GO:1990063,sarcoplasmic reticulum
+GO:0016613,nuclear import signal receptor activity
+GO:0042774,TOR signaling
+GO:0045203,intracellular transport
+GO:0030313,catalytic step 2 spliceosome
+GO:0006616,cytoplasmic dynein complex
+GO:0030677,nuclear inner membrane
+GO:0002189,receptor complex
+GO:0044096,extrinsic component of mitochondrial inner membrane
+GO:0052718,ribosomal large subunit export from nucleus
+GO:0005815,filopodium
+GO:0005956,acetyl-CoA carboxylase complex
+GO:0008540,signal peptidase complex
+GO:0009328,mitochondrial nucleoid
+GO:0044164,phosphopyruvate hydratase complex
+GO:0071513,protein targeting to vacuole
+GO:0002184,mitochondrial respiratory chain complex I
+GO:0009319,vesicle
+GO:0005945,cytoplasmic stress granule
+GO:0009361,transcription factor TFIIH holo complex
+GO:0043527,fungal-type vacuole membrane
+GO:1990060,heterotrimeric G-protein complex
+GO:0030096,endocytic recycling
+GO:0097691,protein insertion into mitochondrial inner membrane
+GO:0000159,Cajal body
+GO:0000776,growth cone
+GO:0005951,"nuclear chromosome, telomeric region"
+GO:0030150,glutamatergic synapse
+GO:0000781,DASH complex
+GO:0042709,mRNA cleavage factor complex
+GO:0000777,"protein import into peroxisome matrix, docking"
+GO:0044569,phagophore assembly site
+GO:0000785,protein processing involved in protein targeting to mitochondrion
+GO:0098046,Cdc73/Paf1 complex
+GO:0016471,mitochondrial small ribosomal subunit
+GO:0031204,PML body
+GO:0070062,AP-3 adaptor complex
+GO:0045095,cis-Golgi network
+GO:0097361,actin cortical patch
+GO:0005844,presynaptic active zone
+GO:0006408,mitochondrial calcium ion homeostasis
+GO:0030688,keratin filament
+GO:0140221,protein targeting
+GO:0005813,ESCRT II complex
+GO:0033180,endosome transport via multivesicular body sorting pathway

@@ -12,6 +12,7 @@ library(shinydashboard)
 library(shinyWidgets)
 library(shinyjs)
 library(shinyFiles)
+library(purrr)
 library(readxl)
 library(Peptides)
 library(stringr)
@@ -459,8 +460,7 @@ shinyServer(
                      fdr = 0.01,
                      makeDashboard = T,
                      dashboardPath = tempReport,
-                     saveOutput = T,
-                     usePB = F
+                     saveOutput = T
                   )
 
                   setProgress(value = 0.75)
