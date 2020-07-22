@@ -13,8 +13,7 @@
 
 download_UP_database <-
    function(
-      taxon_number,
-      max_workers = 8L
+      taxon_number
    ) {
 
       # Check for a file in the input folder which contains the UniProt.ws
@@ -82,7 +81,7 @@ download_UP_database <-
 
       if (future::nbrOfWorkers() == 1) {
 
-         future::plan(future::multisession(workers = 6))
+         future::plan(future::multisession(workers = 4))
 
       }
 
@@ -92,7 +91,7 @@ download_UP_database <-
       # Create a safe version of UniProt.ws which will not crash
       # the whole damn program if it fails
 
-      numberofchunks <- ceiling(length(UPtaxon@taxIdUniprots)/100)
+      numberofchunks <- ceiling(length(UPtaxon@taxIdUniprots)/50)
 
       glue::glue("Cutting taxon into {numberofchunks} chunks") %>%
          message()
@@ -100,14 +99,6 @@ download_UP_database <-
       accession_chunks <- chunk2(UPtaxon@taxIdUniprots, numberofchunks)
 
       safeselect <- purrr::safely(UniProt.ws::select)
-
-      # message(
-      #    paste0(
-      #       "There are ",
-      #       length(accession_chunks),
-      #       " chunks"
-      #    )
-      # )
 
       colsToQuery <-
          c(
@@ -118,7 +109,7 @@ download_UP_database <-
             "GO-ID"
          )
 
-      paste0("\nGetting info from UniProt for taxon ", taxon_number) %>%
+      paste0("\nGetting info from UniProt for taxon ", taxon_number, "\n") %>%
          message()
 
       results_safe <-
@@ -159,26 +150,35 @@ download_UP_database <-
          )
       )
 
+      # Save UPtaxon as an RDS
+
       saveRDS(
          UPtaxon,
          file =
             paste0(
                system.file("extdata", package = "GUPPI"),
-               "/UPtaxon",
+               "/UPdatabase/UPtaxon",
                taxon_number,
                ".rds"
             )
       )
 
-      feather::write_feather(
+      # Save UniProt database as an apache parquet file
+
+      message("\nWriting UniProt database to parquet file\n")
+
+      arrow::write_parquet(
          UPdatabase,
-         paste0(
-            system.file("extdata", package = "GUPPI"),
-            "/",
-            taxon_number,
-            "_full_UniProt_database.feather"
-         )
+         system.file(
+            "extdata",
+            "UPdatabase",
+            paste0(taxon_number, "_full_UniProt_database.gz.parquet"),
+            package = "GUPPI"
+         ),
+         compression = "gzip"
       )
+
+      future::plan(future::multisession(workers = 1))
 
       return(UPdatabase)
 

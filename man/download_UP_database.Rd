@@ -4,7 +4,7 @@
 \alias{download_UP_database}
 \title{download_UP_database}
 \usage{
-download_UP_database(taxon_number, max_workers = 8L)
+download_UP_database(taxon_number)
 }
 \arguments{
 \item{taxon_number}{}
