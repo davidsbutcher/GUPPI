@@ -94,11 +94,11 @@ guppi <-
          )
 
          UPdatabase <-
-            arrow::read_parquet(
+            readRDS(
                system.file(
                   "extdata",
                   "UPdatabase",
-                  paste0(taxon_number, "_full_UniProt_database.gz.parquet"),
+                  paste0(taxon_number, "_full_UniProt_database.rds"),
                   package = "GUPPI"
                )
             )
@@ -126,10 +126,10 @@ guppi <-
       # (sourced from UniMod, PSI-MOD, etc.)
 
       tdreport_mods <-
-         arrow::read_feather(
+         readRDS(
             system.file(
                "extdata",
-               "tdreport_mods_table.feather",
+               "tdreport_mods_table.rds",
                package = "GUPPI"
             )
          )

@@ -165,17 +165,16 @@ download_UP_database <-
 
       # Save UniProt database as an apache parquet file
 
-      message("\nWriting UniProt database to parquet file\n")
+      message("\nWriting UniProt database to rds file\n")
 
-      arrow::write_parquet(
+      saveRDS(
          UPdatabase,
          system.file(
             "extdata",
             "UPdatabase",
-            paste0(taxon_number, "_full_UniProt_database.gz.parquet"),
+            paste0(taxon_number, "_full_UniProt_database.rds"),
             package = "GUPPI"
-         ),
-         compression = "gzip"
+         )
       )
 
       future::plan(future::multisession(workers = 1))

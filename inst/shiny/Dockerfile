@@ -7,9 +7,7 @@ FROM rocker/shiny-verse:latest
 # system libraries of general use
 #RUN /rocker_scripts/install_pandoc.sh
 #RUN /rocker_scripts/install_verse.sh
-		
-RUN R -e "source('https://raw.githubusercontent.com/apache/arrow/master/r/R/install-arrow.R'); install_arrow()"		
-		
+				
 RUN R -e "install.packages('devtools', repos='http://cran.rstudio.com/')"
 
 # install R packages from github
@@ -17,6 +15,7 @@ RUN R -e "install.packages('devtools', repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('davidsbutcher/GUPPI')"
 RUN R -e "devtools::install_github('davidsbutcher/viztools')"
 RUN R -e "devtools::install_github('hrbrmstr/waffle')"
+
 # install R packages from CRAN 
 
 RUN R -e "install.packages('magrittr', repos='http://cran.rstudio.com/')"
