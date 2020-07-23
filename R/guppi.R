@@ -81,7 +81,7 @@ guppi <-
             system.file(
                "extdata",
                "UPdatabase",
-               paste0(taxon_number, "_full_UniProt_database.gz.parquet"),
+               paste0(taxon_number, "_full_UniProt_database.rds"),
                package = "GUPPI"
             )
          )

@@ -24,6 +24,7 @@ download_UP_database <-
          file.exists(
             system.file(
                "extdata",
+               "UPdatabase",
                glue::glue("UPtaxon{taxon_number}.rds"),
                package = "GUPPI"
             )
@@ -36,6 +37,7 @@ download_UP_database <-
             readRDS(
                system.file(
                   "extdata",
+                  "UPdatabase",
                   glue::glue("UPtaxon{taxon_number}.rds"),
                   package = "GUPPI"
                )

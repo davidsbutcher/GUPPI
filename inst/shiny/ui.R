@@ -161,7 +161,7 @@ shinyUI(
         useShinyjs(),
 
         setBackgroundColor(
-            color = c("#F7FBFF", "#2171B5"),
+            color = c("#F7FBFF", "#4C4184"),
             gradient = "linear",
             direction = "bottom"
         ),
