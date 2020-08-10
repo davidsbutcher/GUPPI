@@ -56,7 +56,7 @@ tibble(
 
 False detection rate: `r fdr*100`%
 
-Taxon number for UniProt data: `r as.integer(taxon_number)`
+Taxon number for UniProt data: `r as.integer(taxonNumber)`
 
 ### Protein UpSet for all TDReports
 

@@ -154,6 +154,64 @@ get_GO_terms <-
       return(temptbl)
    }
 
+#' get_GO_terms2
+#'
+#' @param tbl
+#' @param filelist
+#'
+#' @noRd
+#'
+#' @return
+#'
+#' @examples
+
+get_GO_terms2 <-
+   function(tbl, filelist, GO_locs_table) {
+
+      message(
+         paste0("Getting GO subcellular locations for ", basename(filelist))
+      )
+
+      temptbl <-
+         tbl %>%
+         tibble::add_column(
+            GO_term = NA,
+            GO_subcell_loc = NA,
+            GUPPI_loc = NA
+         )
+
+      GO_loc_vec <-
+         GO_locs_table$GO_ID %>%
+         rlang::set_names(GO_locs_table$GUPPI_loc)
+
+      for (i in seq_along(tbl$`GO-ID`)) {
+
+         temptbl$GO_term[i] <-
+            unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
+            trimws() %>%
+            AnnotationDbi::Term() %>%
+            paste(collapse = "; ")
+
+         temptbl$GO_subcell_loc[i] <-
+            unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
+            trimws() %>%
+            AnnotationDbi::Term() %>%
+            .[. %in% GO_locs_table$GO_term] %>%
+            paste(collapse = "; ")
+
+         temptbl$GUPPI_loc[i] <-
+            unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
+            trimws() %>%
+            {names(GO_loc_vec)[match(., GO_loc_vec)]} %>%
+            {.[is.na(.) == FALSE & nchar(.) != 0]} %>%
+            unique() %>%
+            paste(collapse = "; ")
+
+      }
+
+      return(temptbl)
+   }
+
 #' add_GRAVY
 #'
 #' @param tbl
@@ -322,7 +380,9 @@ get_locations_protein <- function(resultslist) {
          dplyr::mutate(
             membrane =
                stringr::str_detect(resultslist[[i]]$GO_subcell_loc, c("membrane")) &
-               !stringr::str_detect(resultslist[[i]]$GO_subcell_loc, c("membrane-bounded periplasmic space"))
+               !stringr::str_detect(
+                  resultslist[[i]]$GO_subcell_loc, c("membrane-bounded periplasmic space")
+               )
          ) %>%
          dplyr::mutate(
             periplasm =
@@ -357,6 +417,59 @@ get_locations_protein <- function(resultslist) {
 
    return(counts)
 }
+
+#' get_locations_general
+#'
+#' @param resultslist
+#'
+#' @noRd
+#'
+#' @return
+#'
+#' @examples
+
+get_locations_general <-
+   function(resultslist, GO_locs_table) {
+
+      GO_loc_vec <-
+         unique(GO_locs_table$GUPPI_loc) %>%
+         .[. != ""]
+
+      location_list <- list()
+
+      for (i in seq_along(resultslist)) {
+
+         tempresults <-
+            purrr::map(
+               as.list(resultslist[[i]]$GUPPI_loc),
+               ~stringr::str_count(.x, GO_loc_vec)
+            )
+
+         location_vec <- vector()
+
+         for (j in seq_along(GO_loc_vec)) {
+            location_vec[[j]] <-
+               purrr::map(
+                  tempresults,
+                  ~.[[j]]
+               ) %>%
+               unlist() %>%
+               sum()
+         }
+
+         location_list[[i]] <- location_vec
+
+      }
+
+      names(location_list) <- names(resultslist)
+
+      tibble::enframe(location_list) %>%
+         tidyr::unnest(cols = c(value)) %>%
+         tibble::add_column(loc = rep(GO_loc_vec, length(resultslist))) %>%
+         tidyr::pivot_wider(names_from = loc) %>%
+         dplyr::rename("tdreport_name" = name)
+
+   }
 
 #' get_locations_proteoform
 #'
@@ -547,6 +660,59 @@ get_locations_byfraction <-
 #' @examples
 #'
 get_locations_byfraction2 <-
+   function(resultslist, GO_locs_table) {
+
+      GO_loc_vec <-
+         unique(GO_locs_table$GUPPI_loc) %>%
+         .[. != ""]
+
+      get_count <-
+         function(vec, pattern) {
+            stringr::str_count(vec, pattern) %>%
+               sum()
+         }
+
+      resultslist_TEMP <-
+         resultslist %>%
+         purrr::imap(
+            ~dplyr::mutate(.x, tdreport_name = .y)
+         ) %>%
+         purrr::reduce(dplyr::union_all)
+
+      resultslist_TEMP3 <-
+         resultslist_TEMP %>%
+         dplyr::group_by(tdreport_name, fraction) %>%
+         dplyr::summarize()
+
+      for (i in seq_along(GO_loc_vec)) {
+
+         resultslist_TEMP2 <-
+            resultslist_TEMP %>%
+            dplyr::group_by(tdreport_name, fraction) %>%
+            dplyr::summarize(get_count(GUPPI_loc, GO_loc_vec[[i]])) %>%
+            dplyr::rename(!!rlang::sym(GO_loc_vec[[i]]) := dplyr::last_col())
+
+         resultslist_TEMP3 <-
+            dplyr::left_join(resultslist_TEMP3, resultslist_TEMP2)
+
+      }
+
+      return(resultslist_TEMP3)
+
+   }
+
+#' get_locations_byfraction_exp
+#'
+#' @param resultslist
+#'
+#' @noRd
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+get_locations_byfraction_exp <-
    function(resultslist) {
 
       # This function gets counts of membrane, cytosolic, and "both" proteoforms based on

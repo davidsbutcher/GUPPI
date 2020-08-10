@@ -13,7 +13,6 @@ library(shinyWidgets)
 library(shinyjs)
 library(shinyFiles)
 library(purrr)
-library(readxl)
 library(Peptides)
 library(stringr)
 library(forcats)
@@ -189,6 +188,7 @@ read_tdreport_filenames <-
    }
 
 # Server ------------------------------------------------------------------
+
 shinyServer(
    function(input, output, session) {
 
@@ -215,7 +215,7 @@ shinyServer(
          reactive(
             {
 
-               switch (
+               switch(
                   input$tdrep_fileinput,
                   Upload = return(FALSE),
                   `Local Filesystem` = return(TRUE)
@@ -374,7 +374,7 @@ shinyServer(
       )
 
 
-      # Create reactive expressions for tdreport path and name
+      # Create reactive expressions for tdreport path, name, GO location type
 
       tdrep_path <-
          reactive(
@@ -424,6 +424,21 @@ shinyServer(
             }
          )
 
+      GOLocType <-
+         reactive(
+            {
+               switch(
+                  isolate(input$taxon),
+                  "83333" = "bacteria",
+                  "4932" = "eukaryota",
+                  "6906" = "eukaryota",
+                  "2097" = "bacteria",
+                  "6239" = "eukaryota",
+                  "9606" = "eukaryota",
+                  "10090" = "eukaryota"
+               )
+            }
+         )
 
 
       # Push the START button for GUPPI
@@ -455,6 +470,7 @@ shinyServer(
                      dirname(tdrep_path())[[1]],
                      tdrep_name(),
                      as.integer(input$taxon),
+                     GOLocType = GOLocType(),
                      fractionAssignments = assignments(),
                      outputdir = outputDir,
                      fdr = 0.01,
@@ -678,7 +694,7 @@ shinyServer(
                               )
                         ) %>%
                            dplyr::filter(tdreport_name == input$file1) %>%
-                           dplyr::select(-tdreport_name, -protein_count)
+                           dplyr::select(-tdreport_name)
                      }
                   )
 

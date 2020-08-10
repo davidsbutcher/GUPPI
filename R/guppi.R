@@ -13,7 +13,8 @@ guppi <-
    function(
       filedir,
       filename,
-      taxon_number,
+      taxonNumber,
+      GOLocType = "bacteria",
       fractionAssignments = NULL,
       outputdir,
       fdr = 0.01,
@@ -40,8 +41,13 @@ guppi <-
       )
 
       assertthat::assert_that(
-         assertthat::is.number(taxon_number),
-         msg = "taxon_number is not a number"
+         assertthat::is.number(taxonNumber),
+         msg = "taxonNumber is not a number"
+      )
+
+      assertthat::assert_that(
+         GOLocType == "bacteria" | GOLocType == "eukaryota",
+         msg = "GOLocType must be 'bacteria' or 'eukaryota'"
       )
 
       assertthat::assert_that(
@@ -81,7 +87,7 @@ guppi <-
             system.file(
                "extdata",
                "UPdatabase",
-               paste0(taxon_number, "_full_UniProt_database.rds"),
+               paste0(taxonNumber, "_full_UniProt_database.rds"),
                package = "GUPPI"
             )
          )
@@ -89,7 +95,7 @@ guppi <-
 
          message(
             glue::glue(
-               "\nLoading UniProt database for taxon {taxon_number} from package directory"
+               "\nLoading UniProt database for taxon {taxonNumber} from package directory"
             )
          )
 
@@ -98,7 +104,7 @@ guppi <-
                system.file(
                   "extdata",
                   "UPdatabase",
-                  paste0(taxon_number, "_full_UniProt_database.rds"),
+                  paste0(taxonNumber, "_full_UniProt_database.rds"),
                   package = "GUPPI"
                )
             )
@@ -106,21 +112,65 @@ guppi <-
       } else {
 
          UPdatabase <-
-            download_UP_database(taxon_number)
+            download_UP_database(taxonNumber)
 
       }
 
       # Load file containing locations corresponding to
       # GO terms
 
-      go_locs <-
-         readRDS(
-            system.file(
-               "extdata",
-               "GO_subcellular_locations.rds",
-               package = "GUPPI"
+      # go_locs <-
+      #    readRDS(
+      #       system.file(
+      #          "extdata",
+      #          "GO_subcellular_locations.rds",
+      #          package = "GUPPI"
+      #       )
+      #    )
+
+      if (GOLocType == "bacteria") {
+
+         go_locs <-
+            read.csv(
+               system.file(
+                  "extdata",
+                  "GO_cellular_component_taxon2_bacteria.csv",
+                  package = "GUPPI"
+               )
+            ) %>%
+            dplyr::pull("GO_term")
+
+         go_locs_table <-
+            read.csv(
+               system.file(
+                  "extdata",
+                  "GO_cellular_component_taxon2_bacteria.csv",
+                  package = "GUPPI"
+               )
             )
-         )
+
+      } else if (GOLocType == "eukaryota") {
+
+         go_locs <-
+            read.csv(
+               system.file(
+                  "extdata",
+                  "GO_cellular_component_taxon2759_eukaryota.csv",
+                  package = "GUPPI"
+               )
+            ) %>%
+            dplyr::pull("GO_term")
+
+         go_locs_table <-
+            read.csv(
+               system.file(
+                  "extdata",
+                  "GO_cellular_component_taxon2759_eukaryota.csv",
+                  package = "GUPPI"
+               )
+            )
+
+      }
 
       # Load file containing all the PTM information from TDreport
       # (sourced from UniMod, PSI-MOD, etc.)
@@ -177,7 +227,7 @@ guppi <-
 
       } else if (extension[[1]] == "tdReport") {
 
-         message("\nReading protein data from tdReport")
+         message("\nReading protein data from tdReport\n")
 
          proteinlist <-
             filelist %>%
@@ -187,7 +237,7 @@ guppi <-
             )
 
 
-         message("\nReading full protein data from tdReport")
+         message("\nReading full protein data from tdReport\n")
 
          proteinlistfull <-
             filelist %>%
@@ -195,6 +245,8 @@ guppi <-
                read_tdreport_protein_full,
                fdr_cutoff = fdr
             )
+
+         message("\nReading proteoform data from tdReport\n")
 
          proteoformlist <-
             filelist %>%
@@ -213,20 +265,17 @@ guppi <-
 
       names(proteinlist) <- filelist
 
-
-      # Add Protein Info --------------------------------------------------------
-
-      # Protein results
+      # Process protein results ------------------------------------------------
 
       results_protein <-
          proteinlist %>%
          purrr::map(
             add_uniprot_info,
-            taxon = taxon_number,
+            taxon = taxonNumber,
             database = UPdatabase,
             tdrep = tdreport_file
          ) %>%
-         purrr::map2(filelist, get_GO_terms, go_locs) %>%
+         purrr::map2(filelist, get_GO_terms2, go_locs_table) %>%
          purrr::map(add_GRAVY) %>%
          purrr::map(add_masses) %>%
          purrr::map(
@@ -239,7 +288,7 @@ guppi <-
          basename()
 
       results_protein[[length(results_protein)+1]] <-
-         get_locations_protein(results_protein)
+         get_locations_general(results_protein, go_locs_table)
 
       names(results_protein)[[length(results_protein)]] <-
          "SUMMARY"
@@ -248,7 +297,7 @@ guppi <-
 
       results_protein_countsbyfraction <-
          results_protein[1 : length(results_protein) - 1] %>%
-         get_locations_byfraction()
+         get_locations_byfraction2(go_locs_table)
 
       # Protein results, all hits
       # maybe this should be called proteoform allhits?
@@ -287,7 +336,9 @@ guppi <-
       #    ) %>% .[[1]] %>% View
 
 
-      # Proteform results
+
+      # Process proteoform results ----------------------------------------------
+
 
       proteoformlist <-
          proteoformlist %>%
@@ -371,7 +422,7 @@ guppi <-
                dplyr::everything()
             )
          ) %>%
-         purrr::map2(filelist, get_GO_terms, go_locs)
+         purrr::map2(filelist, get_GO_terms2, go_locs_table)
 
 
       names(results_proteoform) <-
@@ -379,7 +430,7 @@ guppi <-
          basename()
 
       results_proteoform[[length(results_proteoform)+1]] <-
-         get_locations_proteoform(results_proteoform)
+         get_locations_general(results_proteoform, go_locs_table)
 
       names(results_proteoform)[[length(results_proteoform)]] <-
          "SUMMARY"

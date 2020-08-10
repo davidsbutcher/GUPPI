@@ -13,7 +13,6 @@ library(shinyWidgets)
 library(shinyjs)
 library(shinyFiles)
 library(purrr)
-library(readxl)
 library(Peptides)
 library(stringr)
 library(forcats)
@@ -153,7 +152,7 @@ VT_parameter_tabs <-
 
 shinyUI(
     fixedPage(
-        titlePanel("GUPPI beta shiny app"),
+        titlePanel("Shiny GUPPI R5"),
 
         #theme = "maglab_theme.css",
         #theme = "spacelab.min.css",
@@ -221,12 +220,13 @@ shinyUI(
                                     "Taxon number",
                                     choices =
                                         c(
-                                            "83333 (E. coli K12)" = 83333,
-                                            "4932 (S. cerevisae)" = 4932,
-                                            "2097 (M. genitalium)" = 2097,
-                                            "6239 (C. elegans)" = 6239,
-                                            "9606 (Homo sapiens)" = 9606,
-                                            "10090 (Mus musculus)" = 10090
+                                            "83333 (E. coli K12)" = "83333",
+                                            "4932 (S. cerevisae)" = "4932",
+                                            "6906 (C. reinhardtii)" = "6906",
+                                            "2097 (M. genitalium)" = "2097",
+                                            "6239 (C. elegans)" = "6239",
+                                            "9606 (Homo sapiens)" = "9606",
+                                            "10090 (Mus musculus)" = "10090"
                                         )
                                 ),
                                 br(),
@@ -248,6 +248,15 @@ shinyUI(
                                         "Local Filesystem"
                                     )
                                 ),
+                                br(),
+                                # radioGroupButtons(
+                                #     inputId = "tdrep_GOLocType",
+                                #     label = "Taxon for GO subcellular localization",
+                                #     choices = c(
+                                #         "Bacteria" = "bacteria",
+                                #         "Eukaryota" = "eukaryota"
+                                #     )
+                                # ),
                                 br(),
                                 radioGroupButtons(
                                     inputId = "tdrep_fracs",

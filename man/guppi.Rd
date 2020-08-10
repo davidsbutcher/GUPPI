@@ -7,7 +7,8 @@
 guppi(
   filedir,
   filename,
-  taxon_number,
+  taxonNumber,
+  GOLocType = "bacteria",
   fractionAssignments = NULL,
   outputdir,
   fdr = 0.01,
