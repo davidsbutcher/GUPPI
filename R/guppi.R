@@ -117,28 +117,19 @@ guppi <-
       }
 
       # Load file containing locations corresponding to
-      # GO terms
-
-      # go_locs <-
-      #    readRDS(
-      #       system.file(
-      #          "extdata",
-      #          "GO_subcellular_locations.rds",
-      #          package = "GUPPI"
-      #       )
-      #    )
+      # GO terms, either bacteria or eukaryota
 
       if (GOLocType == "bacteria") {
 
-         go_locs <-
-            read.csv(
-               system.file(
-                  "extdata",
-                  "GO_cellular_component_taxon2_bacteria.csv",
-                  package = "GUPPI"
-               )
-            ) %>%
-            dplyr::pull("GO_term")
+         # go_locs <-
+         #    read.csv(
+         #       system.file(
+         #          "extdata",
+         #          "GO_cellular_component_taxon2_bacteria.csv",
+         #          package = "GUPPI"
+         #       )
+         #    ) %>%
+         #    dplyr::pull("GO_term")
 
          go_locs_table <-
             read.csv(
@@ -151,15 +142,15 @@ guppi <-
 
       } else if (GOLocType == "eukaryota") {
 
-         go_locs <-
-            read.csv(
-               system.file(
-                  "extdata",
-                  "GO_cellular_component_taxon2759_eukaryota.csv",
-                  package = "GUPPI"
-               )
-            ) %>%
-            dplyr::pull("GO_term")
+         # go_locs <-
+         #    read.csv(
+         #       system.file(
+         #          "extdata",
+         #          "GO_cellular_component_taxon2759_eukaryota.csv",
+         #          package = "GUPPI"
+         #       )
+         #    ) %>%
+         #    dplyr::pull("GO_term")
 
          go_locs_table <-
             read.csv(
@@ -189,7 +180,6 @@ guppi <-
       # Save start time to variable for use in output filenames
 
       systime <- format(Sys.time(), "%Y%m%d_%H%M%S")
-
 
       # Read Data Files -----------------------------------------------------------------------------
 
@@ -316,6 +306,23 @@ guppi <-
          basename()
 
 
+      # Proteoform results, all hits, hit counts
+      # This is joined with results_proteoform later to include the hit counts
+      # in the pform report
+
+      results_proteoform_hitcounts <-
+         results_protein_allhits %>%
+         purrr::map(
+            ~dplyr::group_by(
+               .x,
+               filename,
+               ProteoformRecordNum
+            ) %>%
+               dplyr::summarize(HitCount = dplyr::n()) %>%
+               dplyr::ungroup()
+         ) %>%
+         purrr::reduce(dplyr::union_all)
+
       # Proteoform results, best hits per-fraction
 
       # results_protein_allhits %>%
@@ -339,6 +346,8 @@ guppi <-
 
       # Process proteoform results ----------------------------------------------
 
+      # For TDReports without proteoform record nums (i.e. current version of
+      # ProSightPD) replace them with sequential numbers
 
       proteoformlist <-
          proteoformlist %>%
@@ -422,8 +431,10 @@ guppi <-
                dplyr::everything()
             )
          ) %>%
-         purrr::map2(filelist, get_GO_terms2, go_locs_table)
-
+         purrr::map2(filelist, get_GO_terms2, go_locs_table) %>%
+         purrr::map(
+            ~dplyr::left_join(.x, results_proteoform_hitcounts)
+         )
 
       names(results_proteoform) <-
          unlist(filelist) %>%
