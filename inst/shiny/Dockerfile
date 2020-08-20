@@ -4,10 +4,6 @@
 # get shiny serves plus tidyverse packages image
 FROM rocker/shiny-verse:latest
 
-# system libraries of general use
-#RUN /rocker_scripts/install_pandoc.sh
-#RUN /rocker_scripts/install_verse.sh
-				
 RUN R -e "install.packages('devtools', repos='http://cran.rstudio.com/')"
 
 # install R packages from github
