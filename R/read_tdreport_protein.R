@@ -58,7 +58,6 @@ read_tdreport_protein <-
 
       # Generate SQL query using dbplyr
 
-
       output <-
          dplyr::tbl(con, "Isoform") %>%
          dplyr::left_join(

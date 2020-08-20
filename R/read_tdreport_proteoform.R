@@ -20,7 +20,7 @@ read_tdreport_proteoform <-
          glue::glue("\nEstablishing connection to {basename(tdreport)}...")
       )
 
-      #Establish database connection. Keep trying until it works!
+      # Establish database connection. Keep trying until it works!
 
       safe_dbConnect <- purrr::safely(DBI::dbConnect)
 
@@ -47,7 +47,7 @@ read_tdreport_proteoform <-
 
       }
 
-      if (is.null(safecon[["result"]]) == TRUE) stop("Failed to connect using SQLite!")
+      if (is.null(safecon[["result"]]) == TRUE) stop("Failed to connect to tdReport using SQLite!")
 
       con <- safecon[["result"]]
 

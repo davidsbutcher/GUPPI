@@ -188,22 +188,25 @@ get_GO_terms2 <-
 
          temptbl$GO_term[i] <-
             unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
-            trimws() %>%
+            stringr::str_trim() %>%
             AnnotationDbi::Term() %>%
             paste(collapse = "; ")
 
          temptbl$GO_subcell_loc[i] <-
             unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
-            trimws() %>%
+            stringr::str_trim() %>%
             AnnotationDbi::Term() %>%
             .[. %in% GO_locs_table$GO_term] %>%
             paste(collapse = "; ")
 
          temptbl$GUPPI_loc[i] <-
             unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
-            trimws() %>%
-            {names(GO_loc_vec)[match(., GO_loc_vec)]} %>%
+            stringr::str_trim() %>%
+            {names(GO_loc_vec)[match(., stringr::str_trim(GO_loc_vec))]} %>%
             {.[is.na(.) == FALSE & nchar(.) != 0]} %>%
+            strsplit(";") %>%
+            unlist() %>%
+            stringr::str_trim() %>%
             unique() %>%
             paste(collapse = "; ")
 
@@ -664,7 +667,10 @@ get_locations_byfraction2 <-
 
       GO_loc_vec <-
          unique(GO_locs_table$GUPPI_loc) %>%
-         .[. != ""]
+         .[. != ""] %>%
+         stringr::str_split(";") %>%
+         unlist() %>%
+         stringr::str_trim()
 
       get_count <-
          function(vec, pattern) {
