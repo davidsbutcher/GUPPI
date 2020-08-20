@@ -203,6 +203,8 @@ shinyServer(
       disable("VTstart")
       disable("plot_type")
       disable("downloadReport")
+      disable("downloadProteinReport")
+      disable("downloadProteoformReport")
       disable("downloadPDF")
       disable("downloadSVG")
       disable("downloadPNG")
@@ -455,14 +457,20 @@ shinyServer(
                   outputDir <- tempdir()
                   tempReport <- tempfile(fileext = ".html", tmpdir = outputDir)
 
-                  purrr::map2_chr(
-                     tdrep_path(),
-                     fs::path(
-                        dirname(tdrep_path()),
-                        tdrep_name()
-                     ),
-                     ~file.rename(.x, .y)
-                  )
+                  # Rename the file if it's not local, i.e. if it has to be
+                  # copied to a temp dir. Shiny gives a random name to
+                  # files copied to a temp dir
+
+                  if (is_local() == FALSE) {
+                     purrr::map2_chr(
+                        tdrep_path(),
+                        fs::path(
+                           dirname(tdrep_path()),
+                           tdrep_name()
+                        ),
+                        ~file.rename(.x, .y)
+                     )
+                  }
 
                   setProgress(value = 0.5)
 
@@ -473,13 +481,15 @@ shinyServer(
                      GOLocType = GOLocType(),
                      fractionAssignments = assignments(),
                      outputdir = outputDir,
-                     fdr = 0.01,
+                     fdr = as.numeric(input$fdr),
                      makeDashboard = T,
                      dashboardPath = tempReport,
                      saveOutput = T
                   )
 
                   setProgress(value = 0.75)
+
+                  # Download handler for GUPPI report
 
                   output$downloadReport <-
                      downloadHandler(
@@ -488,6 +498,46 @@ shinyServer(
                         ),
                         content = function(file) {
                            file.copy(tempReport, file)
+                        }
+                     )
+
+                  # Download handler for protein report
+
+                  output$downloadProteinReport <-
+                     downloadHandler(
+                        filename = glue::glue(
+                           "{format(Sys.time(), '%Y%m%d_%H%M%S')}_GUPPI_protein_report.xlsx"
+                        ),
+                        content = function(file) {
+                           file.copy(
+                              find_newest_file(
+                                 fs::path(
+                                    outputDir,
+                                    "protein_results"
+                                 )
+                              ),
+                              file
+                           )
+                        }
+                     )
+
+                  # Download handler for protein report
+
+                  output$downloadProteoformReport <-
+                     downloadHandler(
+                        filename = glue::glue(
+                           "{format(Sys.time(), '%Y%m%d_%H%M%S')}_GUPPI_proteoform_report.xlsx"
+                        ),
+                        content = function(file) {
+                           file.copy(
+                              find_newest_file(
+                                 fs::path(
+                                    outputDir,
+                                    "proteoform_results"
+                                 )
+                              ),
+                              file
+                           )
                         }
                      )
 
@@ -511,9 +561,23 @@ shinyServer(
                   enable("VTstart")
                   enable("plot_type")
                   enable("downloadReport")
+                  enable("downloadProteinReport")
+                  enable("downloadProteoformReport")
                   enable("downloadPDF")
                   enable("downloadSVG")
                   enable("downloadPNG")
+
+                  # Save session info (for dev use)
+
+                  systime <- format(Sys.time(), "%Y%m%d_%H%M%S")
+
+                  sessioninfo::session_info() %>%
+                     capture.output() %>%
+                     writeLines(
+                        glue::glue("{outputDir}/session_info/{systime}_shinySessionInfo.txt")
+                     )
+
+                  # Finish off the progress bar
 
                   setProgress(value = 1)
 

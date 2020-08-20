@@ -152,7 +152,7 @@ VT_parameter_tabs <-
 
 shinyUI(
     fixedPage(
-        titlePanel("Shiny GUPPI R5"),
+        titlePanel("GUPPI"),
 
         #theme = "maglab_theme.css",
         #theme = "spacelab.min.css",
@@ -160,7 +160,7 @@ shinyUI(
         useShinyjs(),
 
         setBackgroundColor(
-            color = c("#F7FBFF", "#4C4184"),
+            color = c("#FFFFFF"),
             gradient = "linear",
             direction = "bottom"
         ),
@@ -235,7 +235,9 @@ shinyUI(
                                     "Analyze tdReport"
                                 ),
                                 br(), br(),
-                                downloadButton("downloadReport", label = "Download Report")
+                                downloadButton("downloadReport", label = "Download GUPPI Report"),
+                                downloadButton("downloadProteinReport", label = "Download Protein Report"),
+                                downloadButton("downloadProteoformReport", label = "Download Proteoform Report")
                             ),
                             tabPanel(
                                 "Advanced",
@@ -249,15 +251,6 @@ shinyUI(
                                     )
                                 ),
                                 br(),
-                                # radioGroupButtons(
-                                #     inputId = "tdrep_GOLocType",
-                                #     label = "Taxon for GO subcellular localization",
-                                #     choices = c(
-                                #         "Bacteria" = "bacteria",
-                                #         "Eukaryota" = "eukaryota"
-                                #     )
-                                # ),
-                                br(),
                                 radioGroupButtons(
                                     inputId = "tdrep_fracs",
                                     label = "Fraction assignment",
@@ -265,6 +258,20 @@ shinyUI(
                                         "Automatic",
                                         "Manual"
                                     )
+                                ),
+                                br(),
+                                selectInput(
+                                    "fdr",
+                                    "False detection rate cutoff",
+                                    choices =
+                                        c(
+                                            "0.1%" = 0.001,
+                                            "0.5%" = 0.005,
+                                            "1.0%" = 0.01,
+                                            "5.0%" = 0.05,
+                                            "10%" = 0.1
+                                        ),
+                                    selected = 0.01
                                 )
                             )
                         )
