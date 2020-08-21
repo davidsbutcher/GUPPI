@@ -1,6 +1,6 @@
 `r paste('#', basename(filelist[[i]]), '{data-navmenu="TDReport Filename"}')`
 
-`r shiny::tags$h3(basename(filelist[[i]]), style="text-align:center;color:#ffffff")`
+`r htmltools::tags$h3(basename(filelist[[i]]), style="text-align:center;color:#ffffff")`
 
 ```{r setup, include=FALSE}
 
@@ -55,7 +55,7 @@ heatmap_theme <-
 Row {.tabset .tabset-fade data-height=750}
 -------------------------------------
 
-### Table S`r i`a, Best Protein Hits
+### Table `r i`a, Protein Identifications
 
 ```{r echo=FALSE}
 
@@ -121,7 +121,7 @@ results_protein[[i]] %>%
 
 ```
 
-### Table S`r i`b, Best Proteoform Hits
+### Table `r i`b, Proteoform Identifications
 
 ```{r}
 
@@ -144,6 +144,7 @@ results_proteoform[[i]] %>%
     "ObservedPrecursorMass",
     "MonoisotopicMass",
     "Modification",
+    "HitCount",
     "GRAVY",
     "fraction",
     "filename",
@@ -156,6 +157,7 @@ results_proteoform[[i]] %>%
     "Global Q-value" = GlobalQvalue,
     "Obs. Precursor Mass" = ObservedPrecursorMass,
     "Monoiso. Mass" = MonoisotopicMass,
+    "Hit Count" = HitCount,
     "GRAVY Score" = GRAVY,
     "Fraction" = fraction,
     "Filename" = filename
@@ -272,127 +274,94 @@ plotly::ggplotly(plot) %>%
 
 ```
 
+
 Row
 -------------------------------------
 
-### Protein Heatmaps, Best Protein Hits
+### Proteoform Identifications, UpSet Plot
 
-This heatmap contains no redundant accession numbers.
+```{r echo=FALSE, dpi=300}
+
+results_protein_allhits[[i]] %>% 
+  dplyr::select(
+    ProteoformRecordNum,
+    fraction
+  ) %>%
+  dplyr::arrange(fraction) %>%
+  tidyr::pivot_wider(
+    names_from = fraction,
+    values_from =
+      "ProteoformRecordNum",
+    values_fn = list,
+    names_prefix = "Frac_"
+  ) %>%
+  purrr::flatten() %>%
+  list() %>%
+  rlang::set_names("1") %>% 
+  make_UpSet_plot()
+
+```
+
+
+### Proteoform Identifications, Intersection Degree Plot
 
 ```{r}
 
-bin_size <- 1000   # SPECIFY SIZE for heatmap mass bins
-bins <-  seq.int(0, 200000, by = bin_size)
-
-protein_heatmap_data <- 
-  results_protein[[i]] %>% 
-  dplyr::select(c("ObservedPrecursorMass", "fraction")) %>% 
-  mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
-  group_by(fraction, mass_bin) %>% 
-  summarize("Protein Count" = n()) %>%
-  mutate(mass_bin =  (mass_bin * bin_size) - bin_size) %>% 
-  ungroup() %>% 
-  mutate(fraction = forcats::as_factor(fraction)) %>% 
-  mutate(`Mass Bin (kDa)` = mass_bin/1000) %>% 
-  dplyr::rename("Fraction" = fraction)
-
-protein_heatmap <- 
-  protein_heatmap_data %>% 
-  ggplot(
-    aes(
-      `Mass Bin (kDa)`, 
-      Fraction,
-      fill = `Protein Count`
-    )
-  ) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "C", direction = -1) +
-  xlim(
-    0,
-    plyr::round_any(
-      max(protein_heatmap_data$`Mass Bin (kDa)`),
-      10, f = ceiling
-    )
-  ) +
-  scale_y_discrete(limits = rev(levels(protein_heatmap_data$Fraction))) +
-  labs(
-    x = "Mass Bin (kDa)",
-    y = "Fraction"
-  ) +
-  heatmap_theme
-
-# print(protein_heatmap)
-
-plotly::ggplotly(protein_heatmap) %>% 
+results_protein_allhits[[i]] %>% 
+  dplyr::select(
+    ProteoformRecordNum,
+    fraction
+  ) %>%
+  dplyr::arrange(fraction) %>%
+  tidyr::pivot_wider(
+    names_from = fraction,
+    values_from =
+      ProteoformRecordNum,
+    values_fn = list,
+    names_prefix = "Frac_"
+  ) %>%
+  purrr::flatten() %>%
+  purrr::map(unique) %>% 
+  make_intersection_degree_plot(
+    Yrange = c(0, 100),
+    plotType = "Proteoform"
+  ) %>% 
+  plotly::ggplotly() %>% 
   plotly::config(
     displaylogo = FALSE,
     toImageButtonOptions = download_button_params
   )
-
-
 
 ```
 
 Row
 -------------------------------------
 
-### Proteoform Heatmaps, Best Proteoform Hits
-
-This heatmap contains no redundant proteoform record numbers.
+### Proteoform Identifications, Heatmap
 
 ```{r}
 
-bin_size <- 1000   # SPECIFY SIZE for heatmap mass bins
-bins <-  seq.int(0, 200000, by = bin_size)
-
-proteoform_heatmap_data <- 
-  results_proteoform[[i]] %>% 
-  dplyr::select(c("ObservedPrecursorMass", "fraction")) %>% 
-  dplyr::mutate(mass_bin = cut(ObservedPrecursorMass, breaks = bins, labels = FALSE)) %>%
-  dplyr::group_by(fraction, mass_bin) %>% 
-  dplyr::summarize(n = dplyr::n()) %>%
-  dplyr::mutate(mass_bin =  (mass_bin * bin_size) - bin_size) %>% 
-  dplyr::rename("Proteoform Count" = n) %>%
-  dplyr::ungroup() %>% 
-  dplyr::mutate(fraction = forcats::as_factor(fraction)) %>% 
-  dplyr::mutate(`Mass Bin (kDa)` = mass_bin/1000) %>% 
-  dplyr::rename("Fraction" = fraction)
-
-proteoform_heatmap <- 
-  proteoform_heatmap_data %>% 
-  ggplot(
-    aes(`Mass Bin (kDa)`, Fraction, fill = `Proteoform Count`)
-  ) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "C", direction = -1) +
-  xlim(
-    0,
-    plyr::round_any(
-      max(proteoform_heatmap_data$`Mass Bin (kDa)`),
-      10, f = ceiling
-    )
-  ) +
-  scale_y_discrete(limits = rev(levels(proteoform_heatmap_data$Fraction))) +
-  labs(
-    x = "Mass Bin (kDa)",
-    y = "Fraction"
-  ) +
-  theme_minimal() +
-  theme(text = element_text(size=18))
-
-plotly::ggplotly(proteoform_heatmap) %>% 
+results_protein_allhits[[i]] %>% 
+  dplyr::group_by(
+    ProteoformRecordNum,
+    fraction
+  ) %>% 
+  viztools::make_heatmap(
+    plotType = "Proteoform",
+    orientation = "v",
+    binSize = 1000,
+    massColname = "ObservedPrecursorMass",
+    fractionColname = "fraction"
+  ) %>% 
+  plotly::ggplotly() %>% 
   plotly::config(
     displaylogo = FALSE,
     toImageButtonOptions = download_button_params
   )
 
-
 ```
 
-Row
--------------------------------------
-
-### Result Set Proteoform Heatmaps
+### Proteoform Identifications Heatmap, Result Sets
 
 ```{r}
 
@@ -421,7 +390,28 @@ plotly::ggplotly(proteoform_resultset_heatmap) %>%
 Row
 -------------------------------------
 
-### Hit Count vs. Mass, All hits
+### Proteoform Identifications, Waffle Plot
+
+```{r, out.width="100%"}
+
+waffle1 <- 
+results_protein_countsbyfraction %>%
+  dplyr::filter(tdreport_name == basename(filelist[[i]])) %>%
+  dplyr::ungroup() %>% 
+  dplyr::select(-tdreport_name) %>% 
+  viztools::waffle_iron(
+    fraction_colname = "fraction"
+  )
+
+waffle1 + 
+  ggplot2::theme(plot.margin=ggplot2::unit(c(0,0,0,0),"mm"))
+
+```
+
+Row
+-------------------------------------
+
+### Hit Count vs. Intact Monoisotopic Mass
 
 ```{r}
 allhits_sum <- 
@@ -510,7 +500,7 @@ plotly::subplot(p1, p2, shareX = T, shareY = F, titleY = T, titleX = T)
 Row
 -------------------------------------
 
-### Q-values vs. Mass, Proteoform
+### Proteoform Identification Heatmap, -Log10(Q-value) vs. Mass
 
 ```{r}
 allhits_qvals <- 
@@ -539,7 +529,7 @@ allhits_qvals_plot <-
     text = element_text(size = 12)
   )
 
-  plotly::ggplotly(allhits_qvals_plot) %>% 
+plotly::ggplotly(allhits_qvals_plot) %>% 
   plotly::config(
     displaylogo = FALSE,
     toImageButtonOptions = download_button_params
@@ -553,110 +543,4 @@ allhits_qvals_plot <-
 
 
 ```
-
-<!-- Row -->
-<!-- ------------------------------------- -->
-
-<!-- ### Protein Waffle Plots -->
-
-<!-- ```{r} -->
-
-<!-- counts_byfrac_fltrd <-  -->
-<!--   results_protein_countsbyfraction %>% -->
-<!--   filter(tdreport_name == basename(filelist[[i]])) -->
-
-<!-- fractionlist <-  -->
-<!--   counts_byfrac_fltrd %>%  -->
-<!--   .$fraction %>% -->
-<!--   as.list -->
-
-<!-- waffledata_protein_all_byfraction <-  -->
-<!--   tibble( -->
-<!--     Localization = factor( -->
-<!--       c( -->
-<!--         rep("Cytosolic", length(fractionlist)), -->
-<!--         rep("Membrane", length(fractionlist)), -->
-<!--         rep("Periplasmic", length(fractionlist)), -->
-<!--         rep("Unannotated", length(fractionlist)) -->
-<!--       ) -->
-<!--     ), -->
-<!--     Count = c( -->
-<!--       counts_byfrac_fltrd$cytosol_count, -->
-<!--       counts_byfrac_fltrd$membrane_count, -->
-<!--       counts_byfrac_fltrd$periplasm_count, -->
-<!--       counts_byfrac_fltrd$NOTA_count -->
-<!--     ), -->
-<!--     fraction = rep(counts_byfrac_fltrd$fraction, 4) -->
-<!--   ) %>% -->
-<!--   group_by(fraction, Localization) %>%  -->
-<!--   summarize(Count) -->
-
-<!-- output <- -->
-<!--   waffledata_protein_all_byfraction %>% -->
-<!--   ggplot(aes(fill = Localization, values = Count)) + -->
-<!--   waffle::stat_waffle( -->
-<!--     color = "white", size = 0.2, n_rows = 10, -->
-<!--     flip = TRUE, geom = "tile" -->
-<!--   ) + -->
-<!--   facet_wrap(~fraction, nrow = 1, strip.position = c("bottom")) + -->
-<!--   scale_x_discrete(expand=c(0,0)) + -->
-<!--   scale_y_continuous( -->
-<!--     labels = function(x) x * 10, # this multiplier must be equal to n_rows above -->
-<!--     expand = c(0,0) -->
-<!--   ) + -->
-<!--   ggplot2::scale_fill_viridis_d(option = "plasma", begin = 0, end = 0.85) + -->
-<!--   coord_equal() + -->
-<!--   labs( -->
-<!--     x = "Fraction Number", -->
-<!--     y = "Protein Count" -->
-<!--   ) + -->
-<!--   theme_minimal() + -->
-<!--   theme(panel.grid = element_blank(), axis.ticks.y = element_line()) + -->
-<!--   guides(fill = guide_legend("Localization", reverse = TRUE)) -->
-
-<!-- plotly::ggplotly(output, originalData = FALSE, tooltip = "Localization") %>% -->
-<!--   plotly::config( -->
-<!--     displaylogo = FALSE, -->
-<!--     toImageButtonOptions = download_button_params -->
-<!--   ) -->
-
-<!-- ``` -->
-
-<!-- Row -->
-<!-- ------------------------------------- -->
-
-<!-- ### Unique Proteoforms per Accession -->
-
-<!-- ```{r} -->
-
-<!-- results_proteoform[[i]] %>%  -->
-<!--   group_by(UNIPROTKB) %>%  -->
-<!--   summarize( -->
-<!--     `Unique Proteoforms` = n() -->
-<!--   ) %>%  -->
-<!--   rename("UniProt Accession" = UNIPROTKB) %>%  -->
-<!--   DT::datatable( -->
-<!--     extensions = c("FixedColumns", "Buttons"), -->
-<!--     class = "hover", -->
-<!--     options = list( -->
-<!--       pageLength = 10, -->
-<!--       lengthMenu = c(10, 25), -->
-<!--       pagingType = "full_numbers", -->
-<!--       columnDefs = list( -->
-<!--         list( -->
-<!--           className = 'dt-center' -->
-<!--         ) -->
-<!--       ), -->
-<!--       dom = "Bfrtip", -->
-<!--       scrollX = FALSE, -->
-<!--       buttons = c("copy", "csv", "excel") -->
-<!--     ) -->
-<!--   ) %>%  -->
-<!--   DT::formatStyle( -->
-<!--     1:2, -->
-<!--     fontSize = "9" -->
-<!--   ) -->
-
-
-<!-- ``` -->
 

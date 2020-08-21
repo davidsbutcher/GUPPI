@@ -4,12 +4,15 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 
 output: 
   flexdashboard::flex_dashboard:
-    css: ../css/maglab_theme.css
+    self_contained: TRUE
+    logo: "../css/MagLab Color FTICR Logo.png"
+    css: "../css/maglab_theme.css"
     orientation: rows
-    vertical_layout: scroll
     horizontal_layout: scroll
+    vertical_layout: scroll
     navbar: 
-      - {title: "Github", icon: "fa-github", href: "http://github.com/davidsbutcher/GUPPI", align: right}
+          - {title: "Github", icon: "fa-github", href: "http://github.com/davidsbutcher/GUPPI", align: right}
+          - {title: "NHMFL/ICR", icon: "fa-magnet", href: "https://nationalmaglab.org/user-facilities/icr", align: right}
 
 ---
 
@@ -31,34 +34,155 @@ library(viridis)
 library(waffle)
 library(dplyr)
 
+if (is.null(fractionAssignments) == TRUE) {
+  fracAss = "Automatic"
+} else {
+  fracAss = "Manual"
+}
 
 ```
 
 # Summary
 
-Column {.tabset .tabset-fade data-width=960}
+Row {data-width=600}
 -----------------------------------------------------------------------
 
-### Files analyzed
+```{r include=FALSE}
+
+unique_PTMs <- 
+  results_proteoform_modcounts %>% 
+  dplyr::group_by(tdreport_name) %>% 
+  dplyr::summarize(UniquePTMs = length(unique(ModificationName))) %>% 
+  dplyr::pull(UniquePTMs)
+
+most_popular_name <- 
+  results_proteoform_modcounts %>% 
+  dplyr::group_by(tdreport_name) %>% 
+  dplyr::filter(Count == max(Count)) %>% 
+  dplyr::pull(ModificationName)
+
+most_popular_count <- 
+  results_proteoform_modcounts %>% 
+  dplyr::group_by(tdreport_name) %>% 
+  dplyr::filter(Count == max(Count)) %>% 
+  dplyr::pull(Count)
+
+```
+
+### `r htmltools::tags$h4("Files analyzed")`
 
 ```{r}
 
 tibble(
   `tdReport Name` = map(filelist, basename) %>% unlist(),
   `Protein Count` = map(proteinlist, nrow) %>% unlist(),
-  `Proteoform Count` = map(proteoformlist, nrow) %>% unlist()
+  `Proteoform Count` = map(proteoformlist, nrow) %>% unlist(),
+  `Unique PTM Count` = unique_PTMs,
+  `Most common PTM` = most_popular_name
+  #`Count of most popular PTM` = most_popular_count
 ) %>% 
   knitr::kable() 
 
 ```
 
-### Analysis parameters
+### `r htmltools::tags$h4("GUPPI analysis parameters")`
 
 False detection rate: `r fdr*100`%
 
-Taxon number for UniProt data: `r as.integer(taxonNumber)`
+Taxon number of UniProt database: `r as.integer(taxonNumber)`
 
-### Protein UpSet for all TDReports
+Taxon for determination of subcellular locations: `r GOLocType`
+
+Fraction assignment: `r fracAss`
+
+Row {data-height=600}
+-----------------------------------------------------------------------
+
+### `r htmltools::tags$h4("PTM summary")`
+
+```{r}
+
+results_proteoform_modcounts %>% 
+  dplyr::select(tdreport_name, dplyr::everything()) %>% 
+  DT::datatable(
+    extensions = c("Buttons", "Scroller"),
+    class = "wrap",
+    options = list(
+      autoWidth = TRUE,
+      deferRender = TRUE,
+      scrollY = "425px",
+      scrollX = "600px",
+      scroller = TRUE,
+      columnDefs = list(
+        list(
+          className = 'dt-center'
+        )
+      ),
+      dom = "Bfrtip",
+      buttons = c("copy", "csv", "excel", "colvis")
+    )
+  ) %>% 
+  DT::formatStyle(
+    1:length(results_resultparameters),
+    fontSize = "9"
+  ) %>% 
+  DT::formatStyle(
+    3,
+    columnWidth = "100px",
+    fontSize = "6"
+  )
+
+```
+
+Row {data-height=600}
+-----------------------------------------------------------------------
+
+### `r htmltools::tags$h4("Search parameters")`
+
+```{r}
+
+results_resultparameters %>% 
+  dplyr::mutate(
+    Value = 
+      stringr::str_replace_all(Value, stringr::fixed(","), ";")
+  ) %>% 
+  dplyr::select(
+    tdreport_name, ResultSet, Name, Value, IsActive, GroupName, dplyr::everything()
+  ) %>% 
+  DT::datatable(
+    extensions = c("Buttons", "Scroller"),
+    class = "wrap",
+    options = list(
+      autoWidth = TRUE,
+      deferRender = TRUE,
+      scrollY = "425px",
+      scrollX = "600px",
+      scroller = TRUE,
+      columnDefs = list(
+        list(
+          className = 'dt-center'
+        )
+      ),
+      dom = "Bfrtip",
+      buttons = c("copy", "csv", "excel", "colvis")
+    )
+  ) %>% 
+  DT::formatStyle(
+    1:length(results_resultparameters),
+    fontSize = "9"
+  ) %>% 
+  DT::formatStyle(
+    3,
+    columnWidth = "100px",
+    fontSize = "6"
+  )
+
+```
+
+Row {data-width=600}
+-----------------------------------------------------------------------
+
+### `r htmltools::tags$h4("Protein ID UpSet for analyzed TDReports")`
 
 ```{r, fig.width=10, fig.height=6, dpi = 200}
 
@@ -88,13 +212,13 @@ if (length(filelist) > 1) {
   
 } else {
   
-  pander::pander("Only one TDreport analyzed, no UpSet plot made") 
+  pander::pander("Only one TDReport analyzed, no UpSet plot made") 
   
 }
 
 ```
 
-### Proteoform UpSet for all TDReports
+### `r htmltools::tags$h4("Proteoform ID UpSet for analyzed TDReports")`
 
 ```{r, fig.width=10, fig.height=6, dpi = 200}
 
@@ -124,7 +248,7 @@ if (length(filelist) > 1) {
   
 } else {
   
-  pander::pander("Only one TDreport analyzed, no UpSet plot made") 
+  pander::pander("Only one TDReport analyzed, no UpSet plot made") 
   
 }
 
