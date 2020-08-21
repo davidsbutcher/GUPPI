@@ -221,7 +221,7 @@ shinyUI(
                                     choices =
                                         c(
                                             "83333 (E. coli K12)" = "83333",
-                                            "4932 (S. cerevisae)" = "4932",
+                                            "4932 (S. cerevisiae)" = "4932",
                                             "6906 (C. reinhardtii)" = "6906",
                                             "2097 (M. genitalium)" = "2097",
                                             "6239 (C. elegans)" = "6239",
