@@ -481,7 +481,6 @@ get_locations_general <-
 #' @noRd
 #'
 #' @return
-#' @export
 #'
 #' @examples
 
@@ -564,7 +563,6 @@ get_locations_proteoform <- function(resultslist) {
 #' @noRd
 #'
 #' @return
-#' @export
 #'
 #' @examples
 #'
@@ -658,7 +656,6 @@ get_locations_byfraction <-
 #' @noRd
 #'
 #' @return
-#' @export
 #'
 #' @examples
 #'
@@ -714,7 +711,6 @@ get_locations_byfraction2 <-
 #' @noRd
 #'
 #' @return
-#' @export
 #'
 #' @examples
 #'
@@ -821,3 +817,85 @@ coalesce_by_column <- function(df) {
    return(dplyr::coalesce(!!! as.list(df)))
 
 }
+
+
+
+get_result_parameters <-
+   function(
+      tdreport
+   ) {
+
+      message(
+         glue::glue("\nEstablishing connection to {basename(tdreport)}...")
+      )
+
+      #Establish database connection. Keep trying until it works!
+
+      safe_dbConnect <- purrr::safely(DBI::dbConnect)
+
+      safecon <- safe_dbConnect(RSQLite::SQLite(), ":memory:", dbname = tdreport)
+
+      if (is.null(safecon[["result"]]) == TRUE) {
+
+         message("\nConnection failed, trying again!")
+
+      }
+
+      iteration_num <- 1
+
+      while (is.null(safecon[["result"]]) == TRUE & iteration_num < 100) {
+
+         iteration_num <- iteration_num + 1
+
+         message(glue("Trying to establish database connection, attempt {iteration_num}"))
+         safecon <- safe_dbConnect(
+            RSQLite::SQLite(), ":memory:",
+            dbname = tdreport,
+            synchronous = NULL
+         )
+
+      }
+
+      if (is.null(safecon[["result"]]) == TRUE) stop("Failed to connect using SQLite!")
+
+      con <- safecon[["result"]]
+
+      message("\nConnection to tdReport succeeded")
+
+      # Generate SQL query using dbplyr
+
+      output <-
+         dplyr::tbl(con, "ResultParameter") %>%
+         dplyr::left_join(
+            dplyr::tbl(con, "ResultSet"),
+            by = c("ResultSetId" = "Id")
+         ) %>%
+         dplyr::collect() %>%
+         dplyr::select(
+            -tidyselect::any_of(
+               c(
+                  "Id", "ResultSetId"
+               )
+            ),
+            tidyselect::any_of(
+               c(
+                  "GroupName", "Name.x", "Value", "Name.y"
+               )
+            )
+         ) %>%
+         dplyr::rename(
+            "Name" = tidyselect::any_of("Name.x"),
+            "ResultSet" = tidyselect::any_of("Name.y")
+         )
+
+
+      # Close database connection and return output table
+
+      DBI::dbDisconnect(con)
+
+      message("read_tdreport_protein Finished!")
+
+      return(output)
+
+
+   }

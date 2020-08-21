@@ -375,6 +375,17 @@ guppi <-
 
       }
 
+      results_proteoform_modcounts <-
+         proteoformlist %>%
+         purrr::map(
+            ~parse_mods_special(.x, modification = tdreport_mods)
+         ) %>%
+         purrr::map2(
+            filelist,
+            ~dplyr::mutate(.x, tdreport_name = basename(.y))
+         ) %>%
+         purrr::reduce(dplyr::union_all)
+
       results_proteoform <-
          proteoformlist %>%
          purrr::map(
@@ -544,6 +555,18 @@ guppi <-
 
       }
 
+
+      # Get result parameters ---------------------------------------------------
+
+      results_resultparameters <-
+         purrr::map(
+            filelist,
+            ~get_result_parameters(.x) %>%
+               dplyr::mutate(tdreport_name = basename(.x))
+         ) %>%
+         purrr::reduce(dplyr::union_all)
+
+
       # Make Dashboard ----------------------------------------------------------
 
       if (makeDashboard == TRUE) {
@@ -559,6 +582,7 @@ guppi <-
 
          # Copy folders to temp output directory and knit there to avoid file
          # permission problems in shiny/shinyapps
+
 
          fs::dir_copy(
             system.file(
