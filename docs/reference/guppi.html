@@ -73,7 +73,7 @@ additional data from UniProt." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">GUPPI</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1.00</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.00</span>
       </span>
     </div>
 
@@ -194,20 +194,20 @@ directory.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='kw pkg'>GUPPI</span><span class='kw ns'>::</span><span class='fu'>guppi</span>(
-   <span class='st'>"C:/Users/David Butcher/TDReports"</span>,
-   <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(
-      <span class='st'>"20200420_Excellent_TDReport_01.tdReport"</span>,
-      <span class='st'>"20200420_Excellent_TDReport_02.tdReport"</span>
-   ),
-   <span class='fl'>83333</span>,
-   <span class='kw'>GOLocType</span> <span class='kw'>=</span> <span class='st'>"bacteria"</span>,
-   <span class='kw'>fractionAssignments</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-   <span class='kw'>outputdir</span> <span class='kw'>=</span> <span class='st'>"C:/Users/David Butcher/guppi_output"</span>,
-   <span class='kw'>fdr</span> <span class='kw'>=</span> <span class='fl'>0.01</span>,
-   <span class='kw'>saveOutput</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-   <span class='kw'>makeDashboard</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
-)
+    <span class='kw pkg'>GUPPI</span><span class='kw ns'>::</span><span class='fu'>guppi</span>(
+       <span class='st'>"C:/Users/David Butcher/TDReports"</span>,
+       <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(
+          <span class='st'>"20200420_Excellent_TDReport_01.tdReport"</span>,
+          <span class='st'>"20200420_Excellent_TDReport_02.tdReport"</span>
+       ),
+       <span class='fl'>83333</span>,
+       <span class='kw'>GOLocType</span> <span class='kw'>=</span> <span class='st'>"bacteria"</span>,
+       <span class='kw'>fractionAssignments</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+       <span class='kw'>outputdir</span> <span class='kw'>=</span> <span class='st'>"C:/Users/David Butcher/guppi_output"</span>,
+       <span class='kw'>fdr</span> <span class='kw'>=</span> <span class='fl'>0.01</span>,
+       <span class='kw'>saveOutput</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+       <span class='kw'>makeDashboard</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+    )
 }</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -1,7 +1,7 @@
 Get UniProt Protein Info (GUPPI)
 ================
 
-<img src="inst/css/guppilogo.png" width="250" />
+<img src="inst/assets/guppilogo.png" width="250" />
 
 Process [TDPortal](http://nrtdp.northwestern.edu/tdportal-request/) and
 [ProSightPD](http://proteinaceous.net/product/prosightpd/) top-down

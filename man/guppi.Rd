@@ -63,19 +63,19 @@ additional data from UniProt.
 }
 \examples{
 \dontrun{
-GUPPI::guppi(
-   "C:/Users/David Butcher/TDReports",
-   c(
-      "20200420_Excellent_TDReport_01.tdReport",
-      "20200420_Excellent_TDReport_02.tdReport"
-   ),
-   83333,
-   GOLocType = "bacteria",
-   fractionAssignments = NULL,
-   outputdir = "C:/Users/David Butcher/guppi_output",
-   fdr = 0.01,
-   saveOutput = TRUE,
-   makeDashboard = TRUE
-)
+    GUPPI::guppi(
+       "C:/Users/David Butcher/TDReports",
+       c(
+          "20200420_Excellent_TDReport_01.tdReport",
+          "20200420_Excellent_TDReport_02.tdReport"
+       ),
+       83333,
+       GOLocType = "bacteria",
+       fractionAssignments = NULL,
+       outputdir = "C:/Users/David Butcher/guppi_output",
+       fdr = 0.01,
+       saveOutput = TRUE,
+       makeDashboard = TRUE
+    )
 }
 }

@@ -281,7 +281,7 @@ Row
 
 ### Proteoform Identifications, UpSet Plot
 
-```{r echo=FALSE, dpi=300}
+```{r dpi=300, echo=FALSE}
 
 results_protein_allhits[[i]] %>% 
   dplyr::select(
@@ -335,12 +335,10 @@ results_protein_allhits[[i]] %>%
 
 ```
 
-Row
+Row {data-height=500}
 -------------------------------------
 
-### Proteoform Identifications, Heatmap
-
-Bin size: 1 kilodalton
+### Proteoform Identifications, Heatmap (Bin size = 1 kDa)
 
 ```{r}
 
@@ -364,9 +362,7 @@ results_protein_allhits[[i]] %>%
 
 ```
 
-### Proteoform Identifications Heatmap, Result Sets
-
-Bin size: 1 kilodalton
+### Proteoform Identifications Heatmap, Result Sets (Bin size = 1 kDa)
 
 ```{r}
 

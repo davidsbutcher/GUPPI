@@ -86,7 +86,6 @@ tibble(
   `Proteoform Count` = map(proteoformlist, nrow) %>% unlist(),
   `Unique PTM Count` = unique_PTMs,
   `Most common PTM` = most_popular_name
-  #`Count of most popular PTM` = most_popular_count
 ) %>% 
   knitr::kable() 
 

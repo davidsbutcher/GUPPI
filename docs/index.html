@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">GUPPI</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1.00</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.00</span>
       </span>
     </div>
 
@@ -62,7 +62,9 @@
 <div id="get-uniprot-protein-info-guppi" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#get-uniprot-protein-info-guppi" class="anchor"></a>Get UniProt Protein Info (GUPPI)</h1></div>
-<p>Process TDPortal top-down reports (tdReports) by retrieving information from the UniProt webservice and filtering by a selectable FDR value.</p>
+<p><img src="inst/assets/guppilogo.png" width="250"></p>
+<p>Process <a href="http://nrtdp.northwestern.edu/tdportal-request/">TDPortal</a> and <a href="http://proteinaceous.net/product/prosightpd/">ProSightPD</a> top-down reports (.tdReport files) by retrieving information from <a href="http://www.uniprot.org/">UniProt</a> and filtering by false detection rate. <a href="http://topdownviewer.northwestern.edu/">TDViewer</a> is also highly recommended for viewing top-down reports.</p>
+<p>The easiest way to use the functionality of GUPPI by accessing the <a href="https://icr1.magnet.fsu.edu">GUPPI web application</a>.</p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -73,17 +75,21 @@
 <h2 class="hasAnchor">
 <a href="#input" class="anchor"></a>Input</h2>
 <p>The processing of tdReports is carried out by the <code><a href="reference/guppi.html">guppi()</a></code> function. An example of running the function:</p>
-<div class="sourceCode" id="cb2"><pre class="r"><span class="fu"><a href="reference/guppi.html">guppi</a></span>(
+<div class="sourceCode" id="cb2"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">GUPPI</span>)
+
+<span class="fu"><a href="reference/guppi.html">guppi</a></span>(
    <span class="st">"C:/Users/David Butcher/TDReports"</span>,
    <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(
       <span class="st">"20200420_Excellent_TDReport_01.tdReport"</span>,
       <span class="st">"20200420_Excellent_TDReport_02.tdReport"</span>
    ),
    <span class="fl">83333</span>,
-   <span class="st">"C:/Users/David Butcher/Documents/guppi_output"</span>,
+   <span class="kw">GOLocType</span> <span class="kw">=</span> <span class="st">"bacteria"</span>,
+   <span class="kw">fractionAssignments</span> <span class="kw">=</span> <span class="kw">NULL</span>,
+   <span class="kw">outputdir</span> <span class="kw">=</span> <span class="st">"C:/Users/David Butcher/guppi_output"</span>,
    <span class="kw">fdr</span> <span class="kw">=</span> <span class="fl">0.01</span>,
-   <span class="kw">make_dashboard</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-   <span class="kw">use_PB</span> <span class="kw">=</span> <span class="fl">FALSE</span>
+   <span class="kw">saveOutput</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
+   <span class="kw">makeDashboard</span> <span class="kw">=</span> <span class="fl">TRUE</span>
 )</pre></div>
 <p>Arguments to the <code>guppi</code> function are as follows:</p>
 <div id="mandatory-arguments" class="section level3">
@@ -92,17 +98,20 @@
 <ul>
 <li><p><code>filedir</code> Add the path to the folder containing tdReports to be processed. This directory can be at any level above the tdReports in the directory structure.</p></li>
 <li><p><code>filename</code> Full name of the tdReport file or files, including extension. Must match the name of file exactly.</p></li>
-<li><p><code>taxon_number</code> UniProt taxon number to use for retrieving UniProt data. Should match the taxon number in the tdReport file.</p></li>
-<li><p><code>outputdir</code> Directory to place output files. Must be an existing folder.</p></li>
+<li><p><code>taxon_number</code> NCBI taxon number to use for adding UniProt data. Should match the taxon number from the TDPortal/ProSightPD analysis.</p></li>
+<li><p><code>outputdir</code> Directory to place output files. Directory will be created if it doesn’t exist, but parent directory must be an existing folder.</p></li>
 </ul>
 </div>
 <div id="optional-arguments" class="section level3">
 <h3 class="hasAnchor">
 <a href="#optional-arguments" class="anchor"></a>Optional arguments</h3>
 <ul>
+<li><p><code>GOLocType</code> Name of taxon to use for determination of subcellular locations. Acceptable values are “bacteria” or “eukaryota”.</p></li>
+<li><p><code>fractionAssignments</code> Optional argument. A named list with names set to the fraction numbers of the input files and values set to the input file names. If left blank, GUPPI will attempt to assign fraction numbers automatically from file names in the tdReport.</p></li>
 <li><p><code>fdr</code> False detection rate to use for filtering results. Defaults to 1%.</p></li>
-<li><p><code>make_dashboard</code> Boolean value (TRUE or FALSE) which controls whether an HTML report is generated.</p></li>
-<li><p><code>use_PB</code> Boolean value (TRUE or FALSE). If set to true, <code>RPushbullet</code> will be used to send a Pushbullet notification to your device when the analysis is finished. See <code><a href="https://rdrr.io/pkg/RPushbullet/man/pbSetup.html">?RPushbullet::pbSetup</a></code> for more info.</p></li>
+<li><p><code>saveOutput</code> Boolean value. Controls whether protein report, proteoform report, etc. are saved to output directory. Doesn’t effect GUPPI report. Defaults to TRUE.</p></li>
+<li><p><code>makeDashboard</code> Boolean value (TRUE or FALSE) which controls whether an HTML report is generated. Defaults to FALSE.</p></li>
+<li><p><code>dashboardPath</code> Full path and name of dashboard output (i.e. GUPPI report). Defaults to saving to the /report subdirectory of the output directory.</p></li>
 </ul>
 </div>
 </div>
@@ -116,16 +125,26 @@
 <div id="output" class="section level2">
 <h2 class="hasAnchor">
 <a href="#output" class="anchor"></a>Output</h2>
-<p>The “main” output includes Q values, observed precursor masses, data files, subcellular locations from the GO database and a variety of other parameters for all isoform and proteoform IDs. All isoform IDs and proteoform IDs with Q values which are missing or greater than the cutoff value (<code>fdr</code>) are deleted.</p>
+<p>The “main” output includes Q values, observed precursor masses, data files, subcellular locations from the GO database and a variety of other parameters for all protein and proteoform IDs. All protein and proteoform IDs with Q values which are missing or greater than the cutoff value (<code>fdr</code>) are deleted.</p>
 <p>Output files are saved to the output directory (<code>outputdir</code>). Files are timestamped with the time the script was initialized or share the same name as the input file.</p>
 <ul>
-<li>Protein results are saved to <code>outputdir/YYYYMMDD_hhmmss_protein_results.xlsx</code>.</li>
-<li>Proteoform results are saved to <code>outputdir/YYYYMMDD_hhmmss_proteoform_results.xlsx</code>.</li>
-<li>Output xlsx files contain sheets corresponding to each input tdReport file and a final summary sheet containing all input file names and counts of cytosolic, membrane, periplasmic, and unannotated proteins.</li>
-<li>Lists of all protein hits including UniProt accession number, Q value, data file, result type (i.e. tight absolute mass, find unexpected modifications, or biomarker) are saved to <code>outputdir/protein_results_allhits</code> and share names with input files.</li>
-<li>Workspace images (.Rdata file containing all R objects) from the end of the analysis are saved to <code>outputdir/workspace_images</code>.</li>
-<li>If <code>make_dashboard</code> is set to TRUE, an HTML report is saved to <code>outputdir/report</code>.</li>
+<li>Protein results are saved to <code>outputdir/protein_results/YYYYMMDD_hhmmss_protein_results.xlsx</code>.</li>
+<li>Proteoform results are saved to <code>outputdir/proteoform_results/YYYYMMDD_hhmmss_proteoform_results.xlsx</code>.</li>
+<li>Output xlsx files contain sheets corresponding to each input tdReport file and a final summary sheet containing all input file names and counts of proteins based on identified subcellular localizations.</li>
+<li>Proteoform results including all hits from the tdReport are saved to <code>outputdir/protein_results_allhits/{filename}_allhits.xlsx</code>.</li>
+<li>Results showing generalized subcellular localizations determined from protein results for each tdReport are saved to <code>outputdir/protein_results_countsbyfraction/YYYYMMDD_hhmmss_countsbyfrac.xlsx</code>.</li>
+<li>If <code>makeDashboard</code> is set to TRUE, an HTML report is saved to <code>outputdir/report</code>.</li>
 </ul>
+</div>
+<div id="dependencies" class="section level2">
+<h2 class="hasAnchor">
+<a href="#dependencies" class="anchor"></a>Dependencies</h2>
+<p>Package dependencies are listed in the <code>Imports</code> section of the DESCRIPTION file and include packages from CRAN, Bioconductor, and Github.</p>
+</div>
+<div id="license-and-attribution" class="section level2">
+<h2 class="hasAnchor">
+<a href="#license-and-attribution" class="anchor"></a>License and attribution</h2>
+<p>Package developed by David S. Butcher and licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>.</p>
 </div>
 </div>
   </div>
