@@ -4,6 +4,13 @@
 # get shiny serves plus tidyverse packages image
 FROM rocker/shiny-verse:latest
 
+# install R packages from Bioconductor
+
+RUN R -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
+
+RUN R -e "BiocManager::install('GO.db')"
+RUN R -e "BiocManager::install('UniProt.ws')"
+
 RUN R -e "install.packages('devtools', repos='http://cran.rstudio.com/')"
 
 # install R packages from github
@@ -11,6 +18,7 @@ RUN R -e "install.packages('devtools', repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('davidsbutcher/GUPPI')"
 RUN R -e "devtools::install_github('davidsbutcher/viztools')"
 RUN R -e "devtools::install_github('hrbrmstr/waffle')"
+RUN R -e "devtools::install_github('rstudio/fontawesome')"
 
 # install R packages from CRAN 
 
@@ -50,13 +58,6 @@ RUN R -e "install.packages('dbplyr', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('writexl', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('readxl', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('sessioninfo', repos='http://cran.rstudio.com/')"
-
-# install R packages from Bioconductor
-
-RUN R -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
-
-RUN R -e "BiocManager::install('GO.db')"
-RUN R -e "BiocManager::install('UniProt.ws')"
 
 # copy the app to the image
 COPY ui.R /var/guppi/
