@@ -21,6 +21,7 @@ library(ggthemes)
 library(viridis)
 library(waffle)
 library(dplyr)
+library(magick)
 
 # Plotly parameters
 
@@ -339,6 +340,8 @@ Row
 
 ### Proteoform Identifications, Heatmap
 
+Bin size: 1 kilodalton
+
 ```{r}
 
 results_protein_allhits[[i]] %>% 
@@ -362,6 +365,8 @@ results_protein_allhits[[i]] %>%
 ```
 
 ### Proteoform Identifications Heatmap, Result Sets
+
+Bin size: 1 kilodalton
 
 ```{r}
 
@@ -395,7 +400,7 @@ Row
 ```{r, out.width="100%"}
 
 waffle1 <- 
-results_protein_countsbyfraction %>%
+  results_protein_countsbyfraction %>%
   dplyr::filter(tdreport_name == basename(filelist[[i]])) %>%
   dplyr::ungroup() %>% 
   dplyr::select(-tdreport_name) %>% 
@@ -403,8 +408,14 @@ results_protein_countsbyfraction %>%
     fraction_colname = "fraction"
   )
 
-waffle1 + 
-  ggplot2::theme(plot.margin=ggplot2::unit(c(0,0,0,0),"mm"))
+fig1 <- image_graph(height = 2400, width = 3200, res = 300)
+
+waffle1
+
+dev.off()
+
+magick::image_trim(fig1)
+
 
 ```
 
@@ -414,6 +425,7 @@ Row
 ### Hit Count vs. Intact Monoisotopic Mass
 
 ```{r}
+
 allhits_sum <- 
   results_protein_allhits[[i]] %>% 
   mutate(MonoisotopicMass = MonoisotopicMass/1000) %>% 
@@ -501,6 +513,8 @@ Row
 -------------------------------------
 
 ### Proteoform Identification Heatmap, -Log10(Q-value) vs. Mass
+
+Bin size: 1 kilodalton
 
 ```{r}
 allhits_qvals <- 

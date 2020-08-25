@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     self_contained: TRUE
-    logo: "../css/MagLab Color FTICR Logo.png"
+    logo: "../css/MagLab-Color-FTICR-Logo.png"
     css: "../css/maglab_theme.css"
     orientation: rows
     horizontal_layout: scroll
@@ -33,6 +33,8 @@ library(ggthemes)
 library(viridis)
 library(waffle)
 library(dplyr)
+library(sessioninfo)
+library(fontawesome)
 
 if (is.null(fractionAssignments) == TRUE) {
   fracAss = "Automatic"
@@ -73,6 +75,11 @@ most_popular_count <-
 
 ```{r}
 
+GUPPI_version <- 
+  sessioninfo::session_info()$packages %>%
+  dplyr::filter(package == "GUPPI") %>%
+  .$loadedversion
+
 tibble(
   `tdReport Name` = map(filelist, basename) %>% unlist(),
   `Protein Count` = map(proteinlist, nrow) %>% unlist(),
@@ -94,6 +101,8 @@ Taxon number of UniProt database: `r as.integer(taxonNumber)`
 Taxon for determination of subcellular locations: `r GOLocType`
 
 Fraction assignment: `r fracAss`
+
+GUPPI version: `r GUPPI_version`
 
 Row {data-height=600}
 -----------------------------------------------------------------------
@@ -284,6 +293,15 @@ for (i in seq_along(filelist)) {
 
 # About
 
-GUPPI package created by David Butcher (drdavidbutcher@gmail.com).
+<br>
 
-Package available on [Github](https://github.com/davidsbutcher/GUPPI).
+GUPPI is developed by [David S. Butcher](http://www.davidsbutcher.com) and provided as a service by the biological applications subgroup of the ICR group at the [National High Magnetic Field Laboratory](http://www.nationalmaglab.org).
+
+`r fa("readme")` [Read the package documentation](http://davidsbutcher.github.io/GUPPI/)
+
+`r fa("github")` [View source code on Github](http://github.com/davidsbutcher/GUPPI)
+
+`r fa("envelope")` [Contact the package author](mailto:dbutcher@magnet.fsu.edu)
+
+<br>
+

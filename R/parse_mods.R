@@ -1,11 +1,6 @@
 #' parse_mods
 #'
-#' @param tbl
-#' @param modification
-#'
-#' @return
-#'
-#' @examples
+#' @noRd
 
 parse_mods <-
    function(

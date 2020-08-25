@@ -15,6 +15,7 @@ RUN R -e "devtools::install_github('hrbrmstr/waffle')"
 # install R packages from CRAN 
 
 RUN R -e "install.packages('magrittr', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('magick', repos='http://cran.rstudio.com/')"
 #RUN R -e "install.packages('dplyr', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('assertthat', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('tictoc', repos='http://cran.rstudio.com/')"

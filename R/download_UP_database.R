@@ -1,15 +1,15 @@
 
 #' download_UP_database
 #'
-#' @param taxon_number
+#' @param taxon_number NCBI taxon number of UniProt database to download.
 #'
 #' @return
 #'
 #' @import magrittr
-#'
-#' @export
-#'
-#' @examples
+#' 
+#' @noRd
+#' 
+
 
 download_UP_database <-
    function(

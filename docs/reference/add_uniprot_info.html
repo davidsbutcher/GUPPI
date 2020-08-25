@@ -112,14 +112,22 @@
     <p>add_uniprot_info</p>
     </div>
 
-    <pre class="usage"><span class='fu'>add_uniprot_info</span>(<span class='no'>listofproteins</span>, <span class='kw'>taxon</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>database</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>tdrep</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+    <pre class="usage"><span class='fu'>add_uniprot_info</span>(<span class='no'>listofproteins</span>, <span class='kw'>database</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>tdrep</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>listofproteins</th>
+      <td><p>Output from read_tdreport function family.</p></td>
+    </tr>
+    <tr>
+      <th>database</th>
+      <td><p>UniProt database to use for adding data.</p></td>
+    </tr>
+    <tr>
       <th>tdrep</th>
-      <td></td>
+      <td><p>Boolean value, indicates whether the input file is a tdReport.</p></td>
     </tr>
     </table>
 

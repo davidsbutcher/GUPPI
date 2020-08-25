@@ -1,8 +1,17 @@
 Get UniProt Protein Info (GUPPI)
 ================
 
-Process TDPortal top-down reports (tdReports) by retrieving information
-from the UniProt webservice and filtering by a selectable FDR value.
+<img src="inst/css/guppilogo.png" width="250" />
+
+Process [TDPortal](http://nrtdp.northwestern.edu/tdportal-request/) and
+[ProSightPD](http://proteinaceous.net/product/prosightpd/) top-down
+reports (.tdReport files) by retrieving information from
+[UniProt](http://www.uniprot.org/) and filtering by false detection
+rate. [TDViewer](http://topdownviewer.northwestern.edu/) is also highly
+recommended for viewing top-down reports.
+
+The easiest way to use the functionality of GUPPI by accessing the
+[GUPPI web application](https://icr1.magnet.fsu.edu).
 
 ## Installation
 
@@ -18,6 +27,8 @@ The processing of tdReports is carried out by the `guppi()` function. An
 example of running the function:
 
 ``` r
+library(GUPPI)
+
 guppi(
    "C:/Users/David Butcher/TDReports",
    c(
@@ -25,10 +36,12 @@ guppi(
       "20200420_Excellent_TDReport_02.tdReport"
    ),
    83333,
-   "C:/Users/David Butcher/Documents/guppi_output",
+   GOLocType = "bacteria",
+   fractionAssignments = NULL,
+   outputdir = "C:/Users/David Butcher/guppi_output",
    fdr = 0.01,
-   make_dashboard = TRUE,
-   use_PB = FALSE
+   saveOutput = TRUE,
+   makeDashboard = TRUE
 )
 ```
 
@@ -43,24 +56,36 @@ Arguments to the `guppi` function are as follows:
   - `filename` Full name of the tdReport file or files, including
     extension. Must match the name of file exactly.
 
-  - `taxon_number` UniProt taxon number to use for retrieving UniProt
-    data. Should match the taxon number in the tdReport file.
+  - `taxon_number` NCBI taxon number to use for adding UniProt data.
+    Should match the taxon number from the TDPortal/ProSightPD analysis.
 
-  - `outputdir` Directory to place output files. Must be an existing
-    folder.
+  - `outputdir` Directory to place output files. Directory will be
+    created if it doesn’t exist, but parent directory must be an
+    existing folder.
 
 ### Optional arguments
+
+  - `GOLocType` Name of taxon to use for determination of subcellular
+    locations. Acceptable values are “bacteria” or “eukaryota”.
+
+  - `fractionAssignments` Optional argument. A named list with names set
+    to the fraction numbers of the input files and values set to the
+    input file names. If left blank, GUPPI will attempt to assign
+    fraction numbers automatically from file names in the tdReport.
 
   - `fdr` False detection rate to use for filtering results. Defaults to
     1%.
 
-  - `make_dashboard` Boolean value (TRUE or FALSE) which controls
-    whether an HTML report is generated.
+  - `saveOutput` Boolean value. Controls whether protein report,
+    proteoform report, etc. are saved to output directory. Doesn’t
+    effect GUPPI report. Defaults to TRUE.
 
-  - `use_PB` Boolean value (TRUE or FALSE). If set to true,
-    `RPushbullet` will be used to send a Pushbullet notification to your
-    device when the analysis is finished. See `?RPushbullet::pbSetup`
-    for more info.
+  - `makeDashboard` Boolean value (TRUE or FALSE) which controls whether
+    an HTML report is generated. Defaults to FALSE.
+
+  - `dashboardPath` Full path and name of dashboard output (i.e. GUPPI
+    report). Defaults to saving to the /report subdirectory of the
+    output directory.
 
 ## Analysis of tdReports
 
@@ -93,7 +118,7 @@ cutoff are also deleted, as in the TDViewer software.
 
 The “main” output includes Q values, observed precursor masses, data
 files, subcellular locations from the GO database and a variety of other
-parameters for all isoform and proteoform IDs. All isoform IDs and
+parameters for all protein and proteoform IDs. All protein and
 proteoform IDs with Q values which are missing or greater than the
 cutoff value (`fdr`) are deleted.
 
@@ -102,19 +127,28 @@ timestamped with the time the script was initialized or share the same
 name as the input file.
 
   - Protein results are saved to
-    `outputdir/YYYYMMDD_hhmmss_protein_results.xlsx`.
+    `outputdir/protein_results/YYYYMMDD_hhmmss_protein_results.xlsx`.
   - Proteoform results are saved to
-    `outputdir/YYYYMMDD_hhmmss_proteoform_results.xlsx`.
+    `outputdir/proteoform_results/YYYYMMDD_hhmmss_proteoform_results.xlsx`.
   - Output xlsx files contain sheets corresponding to each input
     tdReport file and a final summary sheet containing all input file
-    names and counts of cytosolic, membrane, periplasmic, and
-    unannotated proteins.
-  - Lists of all protein hits including UniProt accession number, Q
-    value, data file, result type (i.e. tight absolute mass, find
-    unexpected modifications, or biomarker) are saved to
-    `outputdir/protein_results_allhits` and share names with input
-    files.
-  - Workspace images (.Rdata file containing all R objects) from the end
-    of the analysis are saved to `outputdir/workspace_images`.
-  - If `make_dashboard` is set to TRUE, an HTML report is saved to
+    names and counts of proteins based on identified subcellular
+    localizations.
+  - Proteoform results including all hits from the tdReport are saved to
+    `outputdir/protein_results_allhits/{filename}_allhits.xlsx`.
+  - Results showing generalized subcellular localizations determined
+    from protein results for each tdReport are saved to
+    `outputdir/protein_results_countsbyfraction/YYYYMMDD_hhmmss_countsbyfrac.xlsx`.
+  - If `makeDashboard` is set to TRUE, an HTML report is saved to
     `outputdir/report`.
+
+## Dependencies
+
+Package dependencies are listed in the `Imports` section of the
+DESCRIPTION file and include packages from CRAN, Bioconductor, and
+Github.
+
+## License and attribution
+
+Package developed by David S. Butcher and licensed under [CC
+BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).

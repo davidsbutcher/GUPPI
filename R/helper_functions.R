@@ -8,8 +8,6 @@
 #'
 #' @return
 #'
-#' @examples
-#'
 
 kickout <-
    function(
@@ -52,7 +50,6 @@ kickout <-
 #' @return
 #' A vector of full file paths
 #'
-#' @examples
 #'
 
 get_data_path <-
@@ -103,67 +100,21 @@ get_data_path <-
 #'
 #' @noRd
 #'
-#' @return
 #'
-#' @examples
 
 chunk2 <- function(x,n) {
    split(x, cut(seq_along(x), n, labels = FALSE))
 }
 
-#' get_GO_terms
-#'
-#' @param tbl
-#' @param filelist
-#'
-#' @noRd
-#'
-#' @return
-#'
-#' @examples
-
-get_GO_terms <-
-   function(tbl, filelist, go_locs) {
-
-      message(
-         paste0("Getting GO subcellular locations for ", basename(filelist))
-      )
-
-      temptbl <-
-         tbl %>%
-         tibble::add_column(GO_term = NA) %>%
-         tibble::add_column(GO_subcell_loc = NA)
-
-      for (i in seq_along(tbl$`GO-ID`)) {
-
-         temptbl$GO_term[i] <-
-            unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
-            trimws() %>%
-            AnnotationDbi::Term() %>%
-            paste(collapse = "; ")
-
-         temptbl$GO_subcell_loc[i] <-
-            unlist(strsplit(temptbl$`GO-ID`[i], ";")) %>%
-            trimws() %>%
-            AnnotationDbi::Term() %>%
-            .[. %in% go_locs] %>%
-            paste(collapse = "; ")
-
-      }
-
-      return(temptbl)
-   }
-
 #' get_GO_terms2
 #'
-#' @param tbl
-#' @param filelist
+#' @param tbl A data frame of protein/proteoform IDs with GO IDs.
+#' @param filelist Name of the input file.
 #'
 #' @noRd
 #'
 #' @return
 #'
-#' @examples
 
 get_GO_terms2 <-
    function(tbl, filelist, GO_locs_table) {
@@ -223,7 +174,6 @@ get_GO_terms2 <-
 #'
 #' @return
 #'
-#' @examples
 
 add_GRAVY <- function(tbl) {
 
@@ -245,7 +195,6 @@ add_GRAVY <- function(tbl) {
 #'
 #' @return
 #'
-#' @examples
 
 add_GRAVY_allhits <- function(tbl) {
 
@@ -268,7 +217,6 @@ add_GRAVY_allhits <- function(tbl) {
 #'
 #' @return
 #'
-#' @examples
 
 add_masses <- function(tbl) {
 
@@ -291,7 +239,6 @@ add_masses <- function(tbl) {
 #'
 #' @return
 #'
-#' @examples
 
 add_fraction <- function(tbl, assignments = NULL) {
 
@@ -344,7 +291,6 @@ add_fraction <- function(tbl, assignments = NULL) {
 #'
 #' @return
 #'
-#' @examples
 
 get_locations_protein <- function(resultslist) {
 
@@ -429,7 +375,6 @@ get_locations_protein <- function(resultslist) {
 #'
 #' @return
 #'
-#' @examples
 
 get_locations_general <-
    function(resultslist, GO_locs_table) {
@@ -482,7 +427,6 @@ get_locations_general <-
 #'
 #' @return
 #'
-#' @examples
 
 get_locations_proteoform <- function(resultslist) {
 
@@ -564,7 +508,6 @@ get_locations_proteoform <- function(resultslist) {
 #'
 #' @return
 #'
-#' @examples
 #'
 get_locations_byfraction <-
    function(resultslist) {
@@ -657,8 +600,7 @@ get_locations_byfraction <-
 #'
 #' @return
 #'
-#' @examples
-#'
+
 get_locations_byfraction2 <-
    function(resultslist, GO_locs_table) {
 
@@ -712,8 +654,7 @@ get_locations_byfraction2 <-
 #'
 #' @return
 #'
-#' @examples
-#'
+
 get_locations_byfraction_exp <-
    function(resultslist) {
 
@@ -810,7 +751,6 @@ get_locations_byfraction_exp <-
 #'
 #' @return
 #'
-#' @examples
 
 coalesce_by_column <- function(df) {
 

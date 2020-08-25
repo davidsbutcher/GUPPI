@@ -1,11 +1,7 @@
 #' parse_mods_allhits
 #'
-#' @param tbl
-#' @param modification
-#'
-#' @return
-#'
-#' @examples
+#' @noRd
+
 
 parse_mods_allhits <-
    function(

@@ -4,11 +4,11 @@
 #' @param fdr_cutoff Cutoff for false detection rate, default 0.01
 #'
 #' @import magrittr
+#' 
+#' @noRd
 #'
 #' @return
-#' @export
 #'
-#' @examples
 
 read_tdreport_protein_full <-
    function(

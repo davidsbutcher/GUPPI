@@ -1,19 +1,15 @@
 #' add_uniprot_info
 #'
-#' @param listofproteins
-#' @param taxon
-#' @param database
-#' @param tdrep
+#' @param listofproteins Output from read_tdreport function family.
+#' @param database UniProt database to use for adding data.
+#' @param tdrep Boolean value, indicates whether the input file is a tdReport.
 #'
-#' @return
-#' @export
+#' @noRd
 #'
-#' @examples
 
 add_uniprot_info <-
    function(
       listofproteins,
-      taxon = NULL,
       database = NULL,
       tdrep = TRUE
    ) {

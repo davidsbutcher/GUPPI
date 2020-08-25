@@ -5,10 +5,7 @@
 #'
 #' @import magrittr
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @noRd
 
 read_tdreport_proteoform <-
    function(
