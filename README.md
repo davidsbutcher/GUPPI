@@ -21,6 +21,28 @@ Install from Github with:
 remotes::install_github("davidsbutcher/GUPPI")
 ```
 
+## Running with Docker
+
+A pre-built Docker image is available at [Docker
+hub](https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1).
+Alternately, after downloading the source code the Dockerfile found in
+`/inst/shiny` can be used to build the Docker image. To download the
+image and start a container, install Docker Desktop and run these
+commands in Windows PowerShell:
+
+``` powershell
+
+docker pull davidsbutcher/guppi:release6
+
+docker run -p 3838:3838 davidsbutcher/guppi:release6
+```
+
+Check [Docker
+hub](https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1)
+for the latest version before pulling an image. The application can be
+accessed at <http://localhost:3838> after the Docker container is
+started.
+
 ## Input
 
 The processing of tdReports is carried out by the `guppi()` function. An

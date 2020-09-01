@@ -71,11 +71,21 @@
 <p>Install from Github with:</p>
 <div class="sourceCode" id="cb1"><pre class="r"><span class="kw pkg">remotes</span><span class="kw ns">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html">install_github</a></span>(<span class="st">"davidsbutcher/GUPPI"</span>)</pre></div>
 </div>
+<div id="running-with-docker" class="section level2">
+<h2 class="hasAnchor">
+<a href="#running-with-docker" class="anchor"></a>Running with Docker</h2>
+<p>A pre-built Docker image is available at <a href="https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1">Docker hub</a>. Alternately, after downloading the source code the Dockerfile found in <code>/inst/shiny</code> can be used to build the Docker image. To download the image and start a container, install Docker Desktop and run these commands in Windows PowerShell:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2"></a>docker pull davidsbutcher/guppi:release6</span>
+<span id="cb2-3"><a href="#cb2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4"></a>docker run -p 3838:3838 davidsbutcher/guppi:release6</span></code></pre></div>
+<p>Check <a href="https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1">Docker hub</a> for the latest version before pulling an image. The application can be accessed at <a href="http://localhost:3838" class="uri">http://localhost:3838</a> after the Docker container is started.</p>
+</div>
 <div id="input" class="section level2">
 <h2 class="hasAnchor">
 <a href="#input" class="anchor"></a>Input</h2>
 <p>The processing of tdReports is carried out by the <code><a href="reference/guppi.html">guppi()</a></code> function. An example of running the function:</p>
-<div class="sourceCode" id="cb2"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">GUPPI</span>)
+<div class="sourceCode" id="cb3"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">GUPPI</span>)
 
 <span class="fu"><a href="reference/guppi.html">guppi</a></span>(
    <span class="st">"C:/Users/David Butcher/TDReports"</span>,
@@ -153,7 +163,8 @@
     <div class="license">
 <h2>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://creativecommons.org/licenses/by-nc/4.0">CC BY-NC 4.0</a></li>
+<li><a href="LICENSE.html">Full license</a></li>
+<li><small><a href="https://opensource.org/licenses/mit-license.php">MIT</a> + file <a href="LICENSE-text.html">LICENSE</a></small></li>
 </ul>
 </div>
 <div class="developers">
