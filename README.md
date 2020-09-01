@@ -26,9 +26,16 @@ remotes::install_github("davidsbutcher/GUPPI")
 A pre-built Docker image is available at [Docker
 hub](https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1).
 Alternately, after downloading the source code the Dockerfile found in
-`/inst/shiny` can be used to build the Docker image. To download the
-image and start a container, install Docker Desktop and run these
-commands in Windows PowerShell:
+`/inst/shiny` can be used to build the Docker image.
+
+### Docker on Windows and macOS
+
+To download the image and start a container, install [Docker
+Desktop](https://www.docker.com/products/docker-desktop), start it, and
+run the following commands in the appropriate shell (e.g. Windows
+PowerShell). NOTE: Check [Docker
+hub](https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1)
+for the latest release version before pulling an image.
 
 ``` powershell
 
@@ -37,11 +44,8 @@ docker pull davidsbutcher/guppi:release6
 docker run -p 3838:3838 davidsbutcher/guppi:release6
 ```
 
-Check [Docker
-hub](https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1)
-for the latest version before pulling an image. The application can be
-accessed at <http://localhost:3838> after the Docker container is
-started.
+The application can be accessed in a web browser at
+<http://localhost:3838> after the Docker container is started.
 
 ## Input
 
@@ -78,7 +82,7 @@ Arguments to the `guppi` function are as follows:
   - `filename` Full name of the tdReport file or files, including
     extension. Must match the name of file exactly.
 
-  - `taxon_number` NCBI taxon number to use for adding UniProt data.
+  - `taxonNumber` NCBI taxon number to use for adding UniProt data.
     Should match the taxon number from the TDPortal/ProSightPD analysis.
 
   - `outputdir` Directory to place output files. Directory will be
@@ -112,29 +116,33 @@ Arguments to the `guppi` function are as follows:
 ## Analysis of tdReports
 
 A connection is established to the SQLite database in the TD Report
-using `RSQLite`. All protein-level (or isoform) and proteform-level IDs
-and other relevant data for each ID are extracted. The taxon number is
-checked against files in the package directory to see if a corresponding
-UniProt taxon database has already been downloaded. If not, the UniProt
-web service is queried for all UniProt accession numbers in the taxon
-using the package `UniProt.ws`. Protein name, organism, organism taxon
-ID, protein sequence, protein function, subcellular location, and any
-associated GO IDs are returned. Note that some of these values may not
-be found and come back as empty or NA.
+using `RSQLite`. All protein- and proteoform-level IDs and other
+relevant data for each ID are extracted. The taxon number is checked
+against files in the package directory to see if a corresponding UniProt
+taxon database has already been downloaded. The following UniProt
+databases are included with the package: **Escherichia coli**,
+**Saccharomyces cerevisiae**, **Chlamydomonas reinhardtii**,
+**Mycoplasma genitalium**, **Caenorhabditis elegans**, **Homo sapiens**,
+and **Mus musculus**.
+
+If a database is not available, the UniProt web service is queried for
+all UniProt accession numbers in the taxon using the package
+`UniProt.ws`. Protein name, organism, organism taxon ID, protein
+sequence, protein function, subcellular location, and any associated GO
+IDs are returned. Note that some of these values may not be found and
+come back as empty or NA. This process can take a long time, owing to
+limitations with the UniProt web service.
 
 The UniProt taxon database is used to add information for all IDs
 extracted from the tdReport. GO terms are obtained for all GO IDs using
 the `GO.db` package and terms corresponding to subcellular locations are
-saved in column “GO\_subcellular\_locations”. Average and monoisotopic
-masses are determined from the protein sequence (intact sequence for
-isoform-level IDs and proteoform sequence for proteoform-level IDs)
-using the `Peptides` package.
+saved in column “GO\_subcellular\_locations”.
 
 Minimum Q value from among all hits, average and monoisotopic masses,
 and data file for lowest Q value hit are obtained for all proteoforms.
 Proteoforms whose Q values are above the FDR cutoff are deleted.
-Proteoforms whose corresponding protein isoform entry is above the FDR
-cutoff are also deleted, as in the TDViewer software.
+Proteoforms whose corresponding protein entry is above the FDR cutoff
+are also deleted.
 
 ## Output
 
@@ -172,5 +180,5 @@ Github.
 
 ## License and attribution
 
-Package developed by David S. Butcher and licensed under [CC
-BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+Package developed by David S. Butcher and available under the [MIT
+license](https://opensource.org/licenses/MIT).

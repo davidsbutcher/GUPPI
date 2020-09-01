@@ -74,12 +74,17 @@
 <div id="running-with-docker" class="section level2">
 <h2 class="hasAnchor">
 <a href="#running-with-docker" class="anchor"></a>Running with Docker</h2>
-<p>A pre-built Docker image is available at <a href="https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1">Docker hub</a>. Alternately, after downloading the source code the Dockerfile found in <code>/inst/shiny</code> can be used to build the Docker image. To download the image and start a container, install Docker Desktop and run these commands in Windows PowerShell:</p>
+<p>A pre-built Docker image is available at <a href="https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1">Docker hub</a>. Alternately, after downloading the source code the Dockerfile found in <code>/inst/shiny</code> can be used to build the Docker image.</p>
+<div id="docker-on-windows-and-macos" class="section level3">
+<h3 class="hasAnchor">
+<a href="#docker-on-windows-and-macos" class="anchor"></a>Docker on Windows and macOS</h3>
+<p>To download the image and start a container, install <a href="https://www.docker.com/products/docker-desktop">Docker Desktop</a>, start it, and run the following commands in the appropriate shell (e.g. Windows PowerShell). NOTE: Check <a href="https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1">Docker hub</a> for the latest release version before pulling an image.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1"></a></span>
 <span id="cb2-2"><a href="#cb2-2"></a>docker pull davidsbutcher/guppi:release6</span>
 <span id="cb2-3"><a href="#cb2-3"></a></span>
 <span id="cb2-4"><a href="#cb2-4"></a>docker run -p 3838:3838 davidsbutcher/guppi:release6</span></code></pre></div>
-<p>Check <a href="https://hub.docker.com/repository/docker/davidsbutcher/guppi/tags?page=1">Docker hub</a> for the latest version before pulling an image. The application can be accessed at <a href="http://localhost:3838" class="uri">http://localhost:3838</a> after the Docker container is started.</p>
+<p>The application can be accessed in a web browser at <a href="http://localhost:3838" class="uri">http://localhost:3838</a> after the Docker container is started.</p>
+</div>
 </div>
 <div id="input" class="section level2">
 <h2 class="hasAnchor">
@@ -108,7 +113,7 @@
 <ul>
 <li><p><code>filedir</code> Add the path to the folder containing tdReports to be processed. This directory can be at any level above the tdReports in the directory structure.</p></li>
 <li><p><code>filename</code> Full name of the tdReport file or files, including extension. Must match the name of file exactly.</p></li>
-<li><p><code>taxon_number</code> NCBI taxon number to use for adding UniProt data. Should match the taxon number from the TDPortal/ProSightPD analysis.</p></li>
+<li><p><code>taxonNumber</code> NCBI taxon number to use for adding UniProt data. Should match the taxon number from the TDPortal/ProSightPD analysis.</p></li>
 <li><p><code>outputdir</code> Directory to place output files. Directory will be created if it doesn’t exist, but parent directory must be an existing folder.</p></li>
 </ul>
 </div>
@@ -128,9 +133,10 @@
 <div id="analysis-of-tdreports" class="section level2">
 <h2 class="hasAnchor">
 <a href="#analysis-of-tdreports" class="anchor"></a>Analysis of tdReports</h2>
-<p>A connection is established to the SQLite database in the TD Report using <code>RSQLite</code>. All protein-level (or isoform) and proteform-level IDs and other relevant data for each ID are extracted. The taxon number is checked against files in the package directory to see if a corresponding UniProt taxon database has already been downloaded. If not, the UniProt web service is queried for all UniProt accession numbers in the taxon using the package <code>UniProt.ws</code>. Protein name, organism, organism taxon ID, protein sequence, protein function, subcellular location, and any associated GO IDs are returned. Note that some of these values may not be found and come back as empty or NA.</p>
-<p>The UniProt taxon database is used to add information for all IDs extracted from the tdReport. GO terms are obtained for all GO IDs using the <code>GO.db</code> package and terms corresponding to subcellular locations are saved in column “GO_subcellular_locations”. Average and monoisotopic masses are determined from the protein sequence (intact sequence for isoform-level IDs and proteoform sequence for proteoform-level IDs) using the <code>Peptides</code> package.</p>
-<p>Minimum Q value from among all hits, average and monoisotopic masses, and data file for lowest Q value hit are obtained for all proteoforms. Proteoforms whose Q values are above the FDR cutoff are deleted. Proteoforms whose corresponding protein isoform entry is above the FDR cutoff are also deleted, as in the TDViewer software.</p>
+<p>A connection is established to the SQLite database in the TD Report using <code>RSQLite</code>. All protein- and proteoform-level IDs and other relevant data for each ID are extracted. The taxon number is checked against files in the package directory to see if a corresponding UniProt taxon database has already been downloaded. The following UniProt databases are included with the package: <strong>Escherichia coli</strong>, <strong>Saccharomyces cerevisiae</strong>, <strong>Chlamydomonas reinhardtii</strong>, <strong>Mycoplasma genitalium</strong>, <strong>Caenorhabditis elegans</strong>, <strong>Homo sapiens</strong>, and <strong>Mus musculus</strong>.</p>
+<p>If a database is not available, the UniProt web service is queried for all UniProt accession numbers in the taxon using the package <code>UniProt.ws</code>. Protein name, organism, organism taxon ID, protein sequence, protein function, subcellular location, and any associated GO IDs are returned. Note that some of these values may not be found and come back as empty or NA. This process can take a long time, owing to limitations with the UniProt web service.</p>
+<p>The UniProt taxon database is used to add information for all IDs extracted from the tdReport. GO terms are obtained for all GO IDs using the <code>GO.db</code> package and terms corresponding to subcellular locations are saved in column “GO_subcellular_locations”.</p>
+<p>Minimum Q value from among all hits, average and monoisotopic masses, and data file for lowest Q value hit are obtained for all proteoforms. Proteoforms whose Q values are above the FDR cutoff are deleted. Proteoforms whose corresponding protein entry is above the FDR cutoff are also deleted.</p>
 </div>
 <div id="output" class="section level2">
 <h2 class="hasAnchor">
@@ -154,7 +160,7 @@
 <div id="license-and-attribution" class="section level2">
 <h2 class="hasAnchor">
 <a href="#license-and-attribution" class="anchor"></a>License and attribution</h2>
-<p>Package developed by David S. Butcher and licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>.</p>
+<p>Package developed by David S. Butcher and available under the <a href="https://opensource.org/licenses/MIT">MIT license</a>.</p>
 </div>
 </div>
   </div>
