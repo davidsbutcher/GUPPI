@@ -11,7 +11,7 @@ rate. [TDViewer](http://topdownviewer.northwestern.edu/) is also highly
 recommended for viewing top-down reports.
 
 The easiest way to use the functionality of GUPPI by accessing the
-[GUPPI web application](https://icr1.magnet.fsu.edu).
+[GUPPI web application](https://tdpapps.magnet.fsu.edu).
 
 ## Installation
 
