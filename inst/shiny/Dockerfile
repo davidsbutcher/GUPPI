@@ -1,5 +1,6 @@
 # DOCKERFILE for GUPPI
 # github.com/davidsbutcher/guppi
+# docker build --tag davidsbutcher/guppi:releaseX --no-cache .
 
 # get shiny plus tidyverse packages image
 FROM rocker/shiny-verse:latest
