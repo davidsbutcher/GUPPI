@@ -1,7 +1,7 @@
 # DOCKERFILE for GUPPI
 # github.com/davidsbutcher/guppi
 
-# get shiny serves plus tidyverse packages image
+# get shiny plus tidyverse packages image
 FROM rocker/shiny-verse:latest
 
 # install R packages from Bioconductor
@@ -34,6 +34,7 @@ RUN R -e "install.packages('shinydashboard', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('shinyWidgets', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('shinyFiles', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('shinyjs', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('colourpicker', repos='http://cran.rstudio.com/')"
 #RUN R -e "install.packages('purrr', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('readxl', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('Peptides', repos='http://cran.rstudio.com/')"

@@ -1,6 +1,6 @@
 Package: GUPPI
 Title: Summarize, expand, and visualize the data in a TDReport file
-Version: 0.1.0.00
+Version: 0.2.0.00
 Authors@R: 
     person(given = "David",
            family = "Butcher",
@@ -25,6 +25,7 @@ Imports:
 	callr,
 	cellranger,
 	cli,
+	colourpicker,
 	colorspace,
 	crayon,
 	crosstalk,

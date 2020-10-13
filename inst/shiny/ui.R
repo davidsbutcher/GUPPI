@@ -12,6 +12,7 @@ library(shinydashboard)
 library(shinyWidgets)
 library(shinyjs)
 library(shinyFiles)
+library(colourpicker)
 library(purrr)
 library(Peptides)
 library(stringr)
@@ -69,10 +70,13 @@ VT_parameter_tabs <-
             ),
             div(
                 style="display: inline-block;vertical-align:top; width: 150px;",
-                textInput(
+                colourInput(
                     "upset_barcolor",
                     "Bar color",
-                    "#4C4184"
+                    value = "#4C4184",
+                    showColour = c("both"),
+                    palette = c("square"),
+                    allowTransparent = FALSE
                 )
             )
         ),
@@ -88,10 +92,13 @@ VT_parameter_tabs <-
             ),
             div(
                 style="display: inline-block;vertical-align:top; width: 150px;",
-                textInput(
+                colourInput(
                     "intdeg_fillcolor",
                     "Fill color",
-                    "#4C4184"
+                    value = "#4C4184",
+                    showColour = c("both"),
+                    palette = c("square"),
+                    allowTransparent = FALSE
                 )
             ),
             sliderInput(
@@ -118,28 +125,54 @@ VT_parameter_tabs <-
                 selectInput(
                     "heatmap_orientation",
                     "Orientation",
-                    choices = c("h", "v")
+                    choices = c(
+                        "Vertical" = "v",
+                        "Horizontal" = "h"
+                    )
                 )
             ),
-            sliderInput(
-                "heatmap_binsize",
-                "Bin size (Da)",
-                500,
-                5000,
-                1000,
-                step = 500
+            div(
+                style="display: inline-block;vertical-align:top; width: 150px;",
+                selectInput(
+                    "heatmap_fillScale",
+                    "Color palette",
+                    choices = c(
+                        "Plasma" = "C",
+                        "Magma" = "A", 
+                        "Inferno" = "B",
+                        "Viridis" = "D",
+                        "Cividis" = "E"
+                    )
+                )
+            ),
+            div(
+                style="display: inline-block;vertical-align:top; width: 150px;",
+                sliderInput(
+                    "heatmap_binsize",
+                    "Bin size (Da)",
+                    500,
+                    5000,
+                    1000,
+                    step = 500
+                )
             ),
             hr(),
             h5("Leave ranges blank for automatic sizing"),
-            numericRangeInput(
-                "heatmap_axisrange",
-                "Mass axis range (kDa)",
-                NULL
+            div(
+                style="display: inline-block;vertical-align:top; width: 150px;",
+                numericRangeInput(
+                    "heatmap_axisrange",
+                    "Mass axis range (kDa)",
+                    NULL
+                )
             ),
-            numericRangeInput(
-                "heatmap_countrange",
-                "Count range",
-                NULL
+            div(
+                style="display: inline-block;vertical-align:top; width: 150px;",
+                numericRangeInput(
+                    "heatmap_countrange",
+                    "Count range",
+                    NULL
+                )
             )
         ),
         tabPanel(
@@ -151,20 +184,20 @@ VT_parameter_tabs <-
 # UI ----------------------------------------------------------------------
 
 shinyUI(
+    
     fixedPage(
+        # shinythemes::themeSelector(),
         titlePanel("GUPPI"),
-
-        #theme = "maglab_theme.css",
-        #theme = "spacelab.min.css",
-
+        theme = "maglab_theme.css",
+        
         useShinyjs(),
-
+        
         setBackgroundColor(
             color = c("#FFFFFF"),
             gradient = "linear",
             direction = "bottom"
         ),
-
+        
         tags$head(
             tags$style(HTML("hr {border-top: 1px solid #A9A9A9;}")),
             tags$style(
@@ -177,16 +210,17 @@ shinyUI(
                 )
             )
         ),
-
-        # SIDEBAR
-
+        
         sidebarLayout(
+            
+            # Sidebar -----------------------------------------------------------------
+            
             sidebarPanel(
                 tabsetPanel(
                     id = "mainpanel",
                     type = "pills",
                     tabPanel(
-                        "GUPPI",
+                        "Analyze",
                         hr(),
                         tabsetPanel(
                             id = "guppipanel",
@@ -232,22 +266,22 @@ shinyUI(
                                 br(),
                                 actionButton(
                                     "GUPPIstart",
-                                    "Analyze tdReport"
+                                    "Analyze tdReport(s)"
                                 ),
                                 br(), br(),
-                                downloadButton("downloadReport", label = "Download GUPPI Report"),
-                                downloadButton("downloadProteinReport", label = "Download Protein Report"),
-                                downloadButton("downloadProteoformReport", label = "Download Proteoform Report")
+                                downloadButton("downloadReport", label = "GUPPI Report"),
+                                downloadButton("downloadProteinReport", label = "Protein Report"),
+                                downloadButton("downloadProteoformReport", label = "Proteoform Report")
                             ),
                             tabPanel(
                                 "Advanced",
                                 br(),
                                 radioGroupButtons(
                                     inputId = "tdrep_fileinput",
-                                    label = "File location",
+                                    label = "File selection",
                                     choices = c(
-                                        "Upload",
-                                        "Local Filesystem"
+                                        "Upload to server",
+                                        "Local filesystem"
                                     )
                                 ),
                                 br(),
@@ -277,7 +311,7 @@ shinyUI(
                         )
                     ),
                     tabPanel(
-                        "viztools",
+                        "Visualize",
                         hr(),
                         tabsetPanel(
                             id = "viztoolspanel",
@@ -288,7 +322,7 @@ shinyUI(
                                 selectInput(
                                     "file1",
                                     "Choose a tdReport",
-                                    choices = "Analyze w/ GUPPI first"
+                                    choices = "Analyze a tdReport first"
                                 ),
                                 div(
                                     id = "input_VT",
@@ -373,10 +407,10 @@ shinyUI(
                     )
                 )
             ),
-
-
-            # MAIN PANEL
-
+            
+            
+            # Main Panel --------------------------------------------------------------
+            
             mainPanel(
                 htmlOutput("ULconfirm"),
                 uiOutput(
@@ -388,8 +422,12 @@ shinyUI(
                 textOutput("error"),
                 br(),
                 plotOutput("outputPlot")
-
-            )
+                
+            ),
+            
+            fluid = FALSE
         )
+        
+        
     )
 )

@@ -283,23 +283,37 @@ Row
 
 ```{r dpi=300, echo=FALSE}
 
-results_protein_allhits[[i]] %>% 
-  dplyr::select(
-    ProteoformRecordNum,
+fraction_number <- 
+  results_protein_allhits[[i]] %>% 
+  dplyr::pull(
     fraction
-  ) %>%
-  dplyr::arrange(fraction) %>%
-  tidyr::pivot_wider(
-    names_from = fraction,
-    values_from =
-      "ProteoformRecordNum",
-    values_fn = list,
-    names_prefix = "Frac_"
-  ) %>%
-  purrr::flatten() %>%
-  list() %>%
-  rlang::set_names("1") %>% 
-  make_UpSet_plot()
+  ) %>% 
+  unique() %>% 
+  length()
+
+if (fraction_number > 1) {
+  results_protein_allhits[[i]] %>% 
+    dplyr::select(
+      ProteoformRecordNum,
+      fraction
+    ) %>%
+    dplyr::arrange(fraction) %>%
+    tidyr::pivot_wider(
+      names_from = fraction,
+      values_from =
+        "ProteoformRecordNum",
+      values_fn = list,
+      names_prefix = "Frac_"
+    ) %>%
+    purrr::flatten() %>%
+    list() %>%
+    rlang::set_names("1") %>% 
+    make_UpSet_plot()
+} else {
+  
+  pander::pander("Only one fraction, no UpSet plot made") 
+  
+}
 
 ```
 

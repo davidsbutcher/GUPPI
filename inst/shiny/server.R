@@ -66,25 +66,24 @@ kickout <-
       list,
       allowed_ext = c("tdReport", "csv", "xlsx")
    ) {
-
+      
       # This function removes any element from the list of input files
       # which does not have one of the allowed
       # extensions or which has "deprecated" in its name
-
-
+      
       for (i in rev(seq_along(list))) {
-
+         
          if (!(tools::file_ext(list[[i]]) %in% allowed_ext)) {
-
+            
             list[[i]] <- NULL
-
+            
          } else if (any(grep("deprecated", list[[i]], fixed = TRUE)) == TRUE) {
-
+            
             list[[i]] <- NULL
-
+            
          }
       }
-
+      
       return(list)
    }
 
@@ -95,14 +94,14 @@ get_data_path <-
       filename,
       extension
    ) {
-
+      
       filesindir <-
          fs::dir_ls(
             filedir, recurse = TRUE, type = "file",
             regexp = paste0("[.]", extension, "$")
          ) %>%
          purrr::as_vector()
-
+      
       if (purrr::map(
          filename,
          ~stringr::str_detect(filesindir, .x)
@@ -110,95 +109,132 @@ get_data_path <-
       purrr::map(any) %>%
       purrr::as_vector() %>%
       all() == FALSE) stop("One or more input files not found")
-
+      
       if (filename %>%
           as.list() %>%
           purrr::map(~stringr::str_subset(filesindir, .x)) %>%
           purrr::map(~any(length(.x) > 1)) %>%
           unlist() %>%
           any() == TRUE) stop("One or more input files found in multiple locations")
-
+      
       filelist <-
          filename %>%
          purrr::map_chr(~stringr::str_subset(filesindir, .x)) %>%
          as.list() %>%
          kickout()
-
+      
       names(filelist) <- seq(1, length(filelist))
-
+      
       return(filelist)
-
+      
    }
 
 read_tdreport_filenames <-
    function(tdreport) {
-
+      
       # Establish database connection. Keep trying until it works!
-
+      
       safe_dbConnect <- safely(dbConnect)
-
+      
       safecon <- safe_dbConnect(RSQLite::SQLite(), ":memory:", dbname = tdreport)
-
+      
       if (is.null(safecon[["result"]]) == TRUE) message("Connection failed, trying again!")
-
+      
       iteration_num <- 1
-
+      
       while (is.null(safecon[["result"]]) == TRUE & iteration_num < 10) {
-
+         
          iteration_num <- iteration_num + 1
-
+         
          message(
             paste0("\nTrying to establish database connection, attempt ", iteration_num)
          )
-
+         
          safecon <-
             safe_dbConnect(
                RSQLite::SQLite(), ":memory:",
                dbname = tdreport,
                synchronous = NULL
             )
-
+         
       }
-
+      
       if (is.null(safecon[["result"]]) == TRUE) {
-
+         
          stop("read_tdreport_filenames could not connect to TDreport")
-
+         
       } else {
-
+         
          message(paste0("\nConnection to ", basename(tdreport), " succeeded"))
          con <- safecon[["result"]]
-
+         
       }
-
+      
       output <-
          dplyr::tbl(con, "DataFile") %>%
          dplyr::select(Name) %>%
          dplyr::collect() %>%
          dplyr::pull()
-
+      
       # Close database connection and return output table
-
+      
       dbDisconnect(con)
-
+      
       message("\nread_tdreport_filenames finished\n")
-
+      
       return(output)
-
+      
    }
+
+add_fraction_shiny <- function(filename) {
+   
+   # This function attempts to parse a filename to extract information
+   # about the fraction that a raw file corresponds to. This is only useful
+   # for GELFrEE/PEPPI/other fractionated data
+   
+   if (stringr::str_detect(
+      filename,
+      "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}"
+   ) == TRUE) {
+      return(
+         stringr::str_extract(
+            filename,
+            "(?i)(?<=gf|gf_|peppi|peppi_|frac|fraction|f|f_)[0-9]{1,2}"
+         )
+      )
+   } else {
+      return(NA)
+   }
+   
+}
+
+has_extension_multi <- function(vector, extension) {
+   
+   res <- 
+      purrr::map_chr(
+         vector,
+         ~assertthat::has_extension(.x, extension)
+      )
+   
+   as.logical(res)
+}
 
 # Server ------------------------------------------------------------------
 
 shinyServer(
    function(input, output, session) {
-
+      
+      
+      # Initial setup -----------------------------------------------------------
+      
+      
       # Hide panels which are only shown conditionally
-
+      
       hide("input_local")
       hide("input_VT")
-
+      
       # Disable buttons which are selectively enabled later
-
+      
       disable("GUPPIstart")
       disable("VTstart")
       disable("plot_type")
@@ -208,102 +244,80 @@ shinyServer(
       disable("downloadPDF")
       disable("downloadSVG")
       disable("downloadPNG")
-
-
-      # Create reactive expression to determine whether file is on local filesystem
-      # depends on input$tdrep_fileinput buttons
-
-      is_local <-
-         reactive(
-            {
-
-               switch(
-                  input$tdrep_fileinput,
-                  Upload = return(FALSE),
-                  `Local Filesystem` = return(TRUE)
-               )
-
-            }
-         )
-
-      observeEvent(
-         input$tdrep_fileinput,
-         {
-            if (is_local() == FALSE) {
-               hide("input_local")
-               shinyjs::show("input_server")
-            } else if (is_local() == TRUE) {
-               hide("input_server")
-               shinyjs::show("input_local")
-            }
-         }
-      )
-
+      
       # Establish params to use for shinyFiles input (local only)
-
+      
       volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
-
+      
       shinyFileChoose(
          input = input,
          "tdrep_local",
          session = session,
          roots = volumes
       )
-
-      # Code to run after a tdRep is uploaded to the SERVER
-
-      observeEvent(
-         input$tdrep,
-         {
-
-            # Show the names of files that were uploaded
-
-            output$ULconfirm <-
-               renderTable(
-                  data.frame(`Uploaded files` = input$tdrep$name)
+      
+      
+      # Modals ------------------------------------------------------------------
+      
+      modal_extension <- function(failed = FALSE) {
+         modalDialog(
+            textInput(
+               "dataset", "Choose data set",
+               placeholder = 'Try "mtcars" or "abc"'
+            ),
+            span(
+               '(Try the name of a valid data object like "mtcars", ',
+               'then a name of a non-existent object like "abc")'
+            ),
+            if (failed)
+               div(tags$b("Invalid name of data object", style = "color: red;")),
+            
+            footer = tagList(
+               modalButton("Cancel"),
+               actionButton("ok", "OK")
+            )
+         )
+      }      
+      
+      # Reactives ---------------------------------------------------------------
+      
+      # Create reactive expression to determine whether file is on local filesystem
+      # depends on input$tdrep_fileinput buttons
+      
+      is_local <-
+         reactive(
+            {
+               
+               switch(
+                  input$tdrep_fileinput,
+                  `Upload to server` = return(FALSE),
+                  `Local filesystem` = return(TRUE)
                )
-
-            enable("GUPPIstart")
-
-            # Get rid of the output plot (for when a new tdRep is analyzed
-            # with a plot still shown)
-
-            output$outputPlot <-
-               NULL
-
-         }
-      )
-
-      # Code to run after a tdRep is chosen on the LOCAL FILESYSTEM
-
-      observeEvent(
-         input$tdrep_local,
-         {
-
-            # Show the names of files that were uploaded
-
-            output$ULconfirm <-
-               renderTable(
-                  data.frame(
-                     `Uploaded files` = parseFilePaths(volumes, input$tdrep_local)$name
-                  )
-               )
-
-            enable("GUPPIstart")
-
-            # Get rid of the output plot (for when a new tdRep is analyzed
-            # with a plot still shown)
-
-            output$outputPlot <-
-               NULL
-
-         }
-      )
-
-
+               
+            }
+         )
+      
+      is_valid <-
+         reactive(
+            {
+               if (is_local() == FALSE && is.null(tdrep_name()) == FALSE) {
+                  all(has_extension_multi(tdrep_name(), "tdReport"))
+               } else if (is_local() == TRUE && is.integer(input$tdrep_local) == FALSE) {
+                  all(has_extension_multi(tdrep_name(), "tdReport"))
+               } else {
+                  FALSE
+               }
+            }
+         )
+      
       input_filenames <-
          reactive(
             {
+               validate(
+                  need(
+                     is_valid(), "Invalid file"
+                  )
+               )
                if (is_local() == FALSE) {
                   unlist(
                      map(
@@ -319,18 +333,17 @@ shinyServer(
                      )
                   )
                }
-
+               
             }
          )
-
-
+      
       input_fracassign_manual <-
          reactive(
             {
                ui_list <- list()
-
+               
                for (i in seq_along(input_filenames())) {
-
+                  
                   ui_list[[i]] <-
                      selectInput(
                         glue("assfrac{i}"),
@@ -339,45 +352,96 @@ shinyServer(
                         width = "150px"
                      )
                }
-
+               
                renderUI(
                   {
+                     validate(
+                        need(
+                           is_valid(), ""
+                        )
+                     )
                      tagList(
                         h3("Choose fraction for each input file"),
                         ui_list
                      )
                   }
                )
-
+               
             }
          )
-
-
-      # Show fraction assignment panel if set to manual assignment
-
-
-      observeEvent(
-         {
-            input$tdrep_fracs
-            input$tdrep
-            input$tdrep_local
-         },
-         if (input$tdrep_fracs == "Manual") {
-
-            output$tdrep_fracassign <-
-               input_fracassign_manual()
-
-         } else if (input$tdrep_fracs == "Automatic") {
-
-            output$tdrep_fracassign <-
-               NULL
-
-         }
-      )
-
-
+      
+      input_fracassign_auto <-
+         reactive(
+            {
+               frac_list <- list()
+               
+               for (i in seq_along(input_filenames())) {
+                  
+                  frac_list[[i]] <-
+                     add_fraction_shiny(input_filenames()[[i]])
+                  
+                  if (is.na(frac_list[[i]]) == TRUE) {
+                     
+                     frac_list[[i]] <- ""
+                     
+                  }
+                  
+               }
+               
+               names(frac_list) <- input_filenames()
+               
+               if (any(frac_list == "") == TRUE) {
+                  
+                  renderUI(
+                     {
+                        validate(
+                           need(
+                              is_valid(), ""
+                           )
+                        )
+                        tagList(
+                           h3("Automatically assigned fractions"),
+                           tags$p(strong("At least one fraction was not automatically assigned"), style="color:red;font-size:14pt;"),
+                           renderTable(
+                              tibble::enframe(
+                                 frac_list,
+                                 name = "filename",
+                                 value = "fraction"
+                              )
+                           )
+                        )
+                     }
+                  )
+                  
+               } else {
+                  
+                  renderUI(
+                     {
+                        validate(
+                           need(
+                              is_valid(), ""
+                           )
+                        )
+                        tagList(
+                           h3("Automatically assigned fractions"),
+                           renderTable(
+                              tibble::enframe(
+                                 frac_list,
+                                 name = "filename",
+                                 value = "fraction"
+                              )
+                           )
+                        )
+                     }
+                  )
+               }
+               
+            }
+         )
+      
+      
       # Create reactive expressions for tdreport path, name, GO location type
-
+      
       tdrep_path <-
          reactive(
             {
@@ -388,7 +452,7 @@ shinyServer(
                }
             }
          )
-
+      
       tdrep_name <-
          reactive(
             {
@@ -399,33 +463,33 @@ shinyServer(
                }
             }
          )
-
-
+      
+      
       assignments <-
          reactive(
             {
                if (input$tdrep_fracs == "Manual") {
-
+                  
                   assfrac_list <-
                      as.list(input_filenames())
-
+                  
                   for (i in seq_along(input_filenames())) {
-
+                     
                      names(assfrac_list)[[i]] <-
                         eval(parse(text = glue("input$assfrac{i}")))
-
+                     
                   }
-
+                  
                   return(assfrac_list)
-
+                  
                } else {
-
+                  
                   return(NULL)
-
+                  
                }
             }
          )
-
+      
       GOLocType <-
          reactive(
             {
@@ -441,14 +505,232 @@ shinyServer(
                )
             }
          )
-
-
+      
+      
+      # Listeners ---------------------------------------------------------------
+      
+      listener_fracassign <- 
+         reactive(
+            {
+               list(
+                  input$tdrep_fracs,
+                  input$tdrep,
+                  input$tdrep_local
+               )
+            }
+         )     
+      
+      listener_upload <- 
+         reactive(
+            {
+               list(
+                  input$tdrep,
+                  input$tdrep_local
+               )
+            }
+         )      
+      
+      # Observers ---------------------------------------------------------------
+      
+      observeEvent(
+         input$tdrep_fileinput,
+         {
+            if (is_local() == FALSE) {
+               hide("input_local")
+               shinyjs::show("input_server")
+            } else if (is_local() == TRUE) {
+               hide("input_server")
+               shinyjs::show("input_local")
+            }
+         }
+      )
+      
+      observeEvent(
+         listener_upload(),
+         {
+            if(is.null(tdrep_name()) == FALSE && !(all(has_extension_multi(tdrep_name(), "tdReport")))) {
+               showModal(
+                  modalDialog(
+                     title = "Invalid file",
+                     "You must upload a tdReport file"
+                  )
+               )   
+            }
+         }
+      )
+      
+      # Code to run after a tdRep is uploaded to the SERVER or LOCAL FILESYSTEM
+      
+      observeEvent(
+         listener_upload(),
+         {
+            
+            # Show the names of files that were uploaded
+            
+            output$ULconfirm <-
+               renderUI(
+                  {
+                     validate(
+                        need(
+                           is_valid(), "No tdReport uploaded"
+                        )
+                     )
+                     tagList(
+                        h3("Uploaded files"),
+                        renderTable(
+                           data.frame("filename" = tdrep_name())
+                        )
+                     )
+                  }
+               )
+            
+            if (is_valid()) {
+               enable("GUPPIstart")
+            } else {
+               disable("GUPPIstart")
+            }
+            
+            # Get rid of the output plot (for when a new tdRep is analyzed
+            # with a plot still shown)
+            
+            output$outputPlot <-
+               NULL
+            
+         }
+      )
+      
+      # Code to run after a tdRep is chosen on the LOCAL FILESYSTEM
+      
+      # observeEvent(
+      #    input$tdrep_local,
+      #    {
+      #       
+      #       # Show the names of files that were uploaded
+      #       
+      #       output$ULconfirm <-
+      #          renderUI(
+      #             {
+      #                tagList(
+      #                   h3("Uploaded files"),
+      #                   renderTable(
+      #                      data.frame(
+      #                         "filename" = tdrep_name()
+      #                      )
+      #                   )
+      #                )
+      #             }
+      #          )
+      #       
+      #       if (all(has_extension_multi(tdrep_name(), "tdReport"))) {
+      #          enable("GUPPIstart")
+      #       } else {
+      #          disable("GUPPIstart")
+      #       }
+      #       
+      #       
+      #       # Get rid of the output plot (for when a new tdRep is analyzed
+      #       # with a plot still shown)
+      #       
+      #       output$outputPlot <-
+      #          NULL
+      #       
+      #    }
+      # )
+      # 
+      # observeEvent(
+      #    {
+      #       listener_fracassign()
+      #    },
+      #    {
+      #       
+      #       output$outputPlot <- NULL
+      #       
+      #       if (input$tdrep_fracs == "Manual") {
+      #          
+      #          if (is_valid() == TRUE) {
+      #             
+      #             output$tdrep_fracassign <- input_fracassign_manual()
+      #             
+      #          }
+      #          
+      #       } else if (input$tdrep_fracs == "Automatic") {
+      #          
+      #          if (is_valid() == TRUE) {
+      #             
+      #             output$tdrep_fracassign <- input_fracassign_auto()
+      #             
+      #          }
+      #          
+      #       }
+      #    }
+      # )
+      
+      observeEvent(
+         {
+            listener_fracassign()
+         },
+         {
+         
+            if (is_valid() == TRUE) {
+               
+               if (input$tdrep_fracs == "Manual") {
+                  output$tdrep_fracassign <- input_fracassign_manual()
+               }
+               
+               if (input$tdrep_fracs == "Automatic") {
+                  output$tdrep_fracassign <- input_fracassign_auto()
+               }
+               
+            } else {
+               
+               output$tdrep_fracassign <- NULL
+               
+            }
+            
+         }
+      )
+      
       # Push the START button for GUPPI
-
+      
       observeEvent(
          input$GUPPIstart,
          {
-
+            
+            # Clear fraction assignment and output plots
+            
+            output$tdrep_fracassign <-
+               NULL
+            
+            output$outputPlot <-
+               NULL
+            
+            # Hide viztools panel during analysis
+            
+            hide("input_VT")
+            
+            # Disable buttons which are selectively enabled later to prevent 
+            # crash during analysis
+            
+            disable("GUPPIstart")
+            disable("VTstart")
+            disable("plot_type")
+            disable("downloadReport")
+            disable("downloadProteinReport")
+            disable("downloadProteoformReport")
+            disable("downloadPDF")
+            disable("downloadSVG")
+            disable("downloadPNG")
+            
+            # Update VT/Visualize dropdown menu
+            
+            updateSelectInput(
+               session = session,
+               inputId = "file1",
+               choices = tdrep_name()
+            )
+            
+            # Initiate progress window
+            
             withProgress(
                message = "Analyzing tdReport, please wait...",
                value = 0,
@@ -456,11 +738,11 @@ shinyServer(
                {
                   outputDir <- tempdir()
                   tempReport <- tempfile(fileext = ".html", tmpdir = outputDir)
-
+                  
                   # Rename the file if it's not local, i.e. if it has to be
                   # copied to a temp dir. Shiny gives a random name to
                   # files copied to a temp dir
-
+                  
                   if (is_local() == FALSE) {
                      purrr::map2_chr(
                         tdrep_path(),
@@ -471,9 +753,9 @@ shinyServer(
                         ~file.rename(.x, .y)
                      )
                   }
-
+                  
                   setProgress(value = 0.5)
-
+                  
                   GUPPI::guppi(
                      dirname(tdrep_path())[[1]],
                      tdrep_name(),
@@ -486,23 +768,25 @@ shinyServer(
                      dashboardPath = tempReport,
                      saveOutput = T
                   )
-
+                  
                   setProgress(value = 0.75)
-
-                  # Download handler for GUPPI report
-
+                  
+                  # Download handlers for GUPPI/protein/proteoforms report
+                  
                   output$downloadReport <-
                      downloadHandler(
-                        filename = glue::glue(
-                           "{format(Sys.time(), '%Y%m%d_%H%M%S')}_GUPPI_report.html"
-                        ),
-                        content = function(file) {
-                           file.copy(tempReport, file)
-                        }
+                        filename = 
+                           glue::glue(
+                              "{format(Sys.time(), '%Y%m%d_%H%M%S')}_GUPPI_report.html"
+                           ),
+                        content = 
+                           function(file) {
+                              file.copy(tempReport, file)
+                           }
                      )
-
+                  
                   # Download handler for protein report
-
+                  
                   output$downloadProteinReport <-
                      downloadHandler(
                         filename = glue::glue(
@@ -520,9 +804,9 @@ shinyServer(
                            )
                         }
                      )
-
+                  
                   # Download handler for protein report
-
+                  
                   output$downloadProteoformReport <-
                      downloadHandler(
                         filename = glue::glue(
@@ -540,24 +824,18 @@ shinyServer(
                            )
                         }
                      )
-
+                  
                   output$confirm <-
                      renderText(
                         {
                            "tdReport analyzed succesfully"
                         }
                      )
-
+                  
                   shinyjs::show("input_VT")
-
-                  updateSelectInput(
-                     session = session,
-                     inputId = "file1",
-                     choices = tdrep_name()
-                  )
-
+                  
                   output$tdrep_fracassign <- NULL
-
+                  
                   enable("VTstart")
                   enable("plot_type")
                   enable("downloadReport")
@@ -566,34 +844,67 @@ shinyServer(
                   enable("downloadPDF")
                   enable("downloadSVG")
                   enable("downloadPNG")
-
+                  
                   # Save session info (for dev use)
-
+                  
                   systime <- format(Sys.time(), "%Y%m%d_%H%M%S")
-
+                  
                   sessioninfo::session_info() %>%
                      capture.output() %>%
                      writeLines(
                         glue::glue("{outputDir}/session_info/{systime}_shinySessionInfo.txt")
                      )
-
+                  
                   # Finish off the progress bar
-
+                  
                   setProgress(value = 1)
-
+                  
                }
             )
          }
       )
-
-      # Isolate input params so plot is not created until VTstart is clicked
-      # 20/7/14: Pretty sure this isn't how this works. Remove later - DSB
-
-      isolate(input$file1)
-      isolate(input$download_font)
-
+      
+      
+      observeEvent(
+         input$plot_type,
+         {
+            updateTabsetPanel(session, "params", selected = input$plot_type)
+         }
+      )
+      
+      observeEvent(
+         input$VTstart,
+         {
+            
+            if (is_local() == FALSE) req(input$tdrep)
+            if (is_local() == TRUE) req(input$tdrep_local)
+            
+            output$confirm <-
+               NULL
+            
+            output$tdrep_fracassign <-
+               NULL
+            
+            output$outputPlot <-
+               renderPlot(
+                  {
+                     switch(
+                        isolate(input$plot_type),
+                        upset = eval(UpSetPlotExpr),
+                        intdeg = eval(IntDegPlotExpr),
+                        heatmap = eval(HeatmapPlotExpr),
+                        waffle = eval(WafflePlotExpr)
+                     )
+                  },
+                  width = 800,
+                  height=800*(input$download_height/input$download_width)
+               )
+            
+         }
+      )
+      
       # Create expression used to generate plots on-demand
-
+      
       UpSetPlotExpr <-
          expr(
             {
@@ -628,7 +939,7 @@ shinyServer(
                            rlang::set_names("1")
                      }
                   )
-
+               
                make_UpSet_plot(
                   isolate(load_UpSet_data()),
                   plotType = isolate(input$upset_name),
@@ -636,14 +947,14 @@ shinyServer(
                )
             }
          )
-
+      
       IntDegPlotExpr <-
          expr(
             {
                load_intdeg_data <-
                   reactive(
                      {
-
+                        
                         readxl::read_xlsx(
                            path =
                               fs::path(
@@ -669,10 +980,10 @@ shinyServer(
                            ) %>%
                            purrr::flatten() %>%
                            purrr::map(unique)
-
+                        
                      }
                   )
-
+               
                make_intersection_degree_plot(
                   isolate(load_intdeg_data()),
                   Yrange = c(0, as.integer(isolate(input$intdeg_yrange))),
@@ -682,14 +993,14 @@ shinyServer(
                )
             }
          )
-
+      
       HeatmapPlotExpr <-
          expr(
             {
                load_heatmap_data <-
                   reactive(
                      {
-
+                        
                         allhits_xlsx <-
                            readxl::read_xlsx(
                               path =
@@ -702,7 +1013,7 @@ shinyServer(
                                     ext = "xlsx"
                                  )
                            )
-
+                        
                         if (input$heatmap_name == "Protein") {
                            allhits_xlsx <-
                               allhits_xlsx %>%
@@ -718,16 +1029,16 @@ shinyServer(
                                  fraction
                               )
                         }
-
+                        
                         allhits_xlsx %>%
                            dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
                            dplyr::filter(`P-score` == min(`P-score`)) %>%
                            dplyr::filter(`C-score` == max(`C-score`)) %>%
                            dplyr::ungroup()
-
+                        
                      }
                   )
-
+               
                viztools::make_heatmap(
                   isolate(load_heatmap_data()),
                   plotType = isolate(input$heatmap_name),
@@ -737,11 +1048,14 @@ shinyServer(
                   fractionColname = "fraction",
                   axisRange = isolate(input$heatmap_axisrange),
                   countRange = isolate(input$heatmap_countrange),
+                  fillScale = isolate(input$heatmap_fillScale),
                   fontFamily = isolate(input$download_font)
                )
             }
          )
-
+      
+      # Plot expressions --------------------------------------------------------
+      
       WafflePlotExpr <-
          expr(
             {
@@ -761,7 +1075,7 @@ shinyServer(
                            dplyr::select(-tdreport_name)
                      }
                   )
-
+               
                viztools::waffle_iron(
                   isolate(load_waffle_data()),
                   fraction_colname = "fraction",
@@ -770,163 +1084,123 @@ shinyServer(
                )
             }
          )
-
-
-      observeEvent(
-         input$plot_type,
-         {
-            updateTabsetPanel(session, "params", selected = input$plot_type)
-         }
-      )
-
-      observeEvent(
-         input$VTstart,
-         {
-
-            if (is_local() == FALSE) req(input$tdrep)
-            if (is_local() == TRUE) req(input$tdrep_local)
-
-            output$confirm <-
-               NULL
-
-            output$tdrep_fracassign <-
-               NULL
-
-            output$outputPlot <-
-               renderPlot(
-                  {
+      
+      # Plot download handlers -------------------------------------------------------
+      
+      output$downloadPDF <-
+         downloadHandler(
+            filename = glue::glue(
+               "{format(Sys.time(), '%Y%m%d_%H%M%S')}_{input$plot_type}_plot.pdf"
+            ),
+            content = function(file) {
+               pdf(
+                  file = file,
+                  width =
                      switch(
-                        isolate(input$plot_type),
+                        input$download_unit,
+                        inch = input$download_width,
+                        cm = input$download_width/2.54
+                     ),
+                  height =
+                     switch(
+                        input$download_unit,
+                        inch = input$download_height,
+                        cm = input$download_height/2.54
+                     ),
+                  bg = "transparent",
+                  useDingbats = FALSE
+               )
+               print(
+                  eval(
+                     switch(
+                        input$plot_type,
                         upset = eval(UpSetPlotExpr),
                         intdeg = eval(IntDegPlotExpr),
                         heatmap = eval(HeatmapPlotExpr),
                         waffle = eval(WafflePlotExpr)
                      )
-                  },
-                  width = 800,
-                  height=800*(input$download_height/input$download_width)
+                  )
                )
-
-            output$downloadPDF <-
-               downloadHandler(
-                  filename = glue::glue(
-                     "{format(Sys.time(), '%Y%m%d_%H%M%S')}_{input$plot_type}_plot.pdf"
-                  ),
-                  content = function(file) {
-                     pdf(
-                        file = file,
-                        width =
-                           switch(
-                              input$download_unit,
-                              inch = input$download_width,
-                              cm = input$download_width/2.54
-                           ),
-                        height =
-                           switch(
-                              input$download_unit,
-                              inch = input$download_height,
-                              cm = input$download_height/2.54
-                           ),
-                        bg = "transparent",
-                        useDingbats = FALSE
-                     )
-                     print(
-                        eval(
-                           switch(
-                              input$plot_type,
-                              upset = eval(UpSetPlotExpr),
-                              intdeg = eval(IntDegPlotExpr),
-                              heatmap = eval(HeatmapPlotExpr),
-                              waffle = eval(WafflePlotExpr)
-                           )
-                        )
-                     )
-                     dev.off()
-                  }
+               dev.off()
+            }
+         )
+      
+      output$downloadPNG <-
+         downloadHandler(
+            filename = glue::glue(
+               "{format(Sys.time(), '%Y%m%d_%H%M%S')}_{input$plot_type}_plot.png"
+            ),
+            content = function(file) {
+               png(
+                  file = file,
+                  width =
+                     switch(
+                        input$download_unit,
+                        inch = input$download_width,
+                        cm = input$download_width/2.54
+                     ),
+                  height =
+                     switch(
+                        input$download_unit,
+                        inch = input$download_height,
+                        cm = input$download_height/2.54
+                     ),
+                  units = "in",
+                  bg = "white",
+                  res = input$download_dpi
                )
-
-            output$downloadPNG <-
-               downloadHandler(
-                  filename = glue::glue(
-                     "{format(Sys.time(), '%Y%m%d_%H%M%S')}_{input$plot_type}_plot.png"
-                  ),
-                  content = function(file) {
-                     png(
-                        file = file,
-                        width =
-                           switch(
-                              input$download_unit,
-                              inch = input$download_width,
-                              cm = input$download_width/2.54
-                           ),
-                        height =
-                           switch(
-                              input$download_unit,
-                              inch = input$download_height,
-                              cm = input$download_height/2.54
-                           ),
-                        units = "in",
-                        bg = "white",
-                        res = input$download_dpi
+               print(
+                  eval(
+                     switch(
+                        input$plot_type,
+                        upset = eval(UpSetPlotExpr),
+                        intdeg = eval(IntDegPlotExpr),
+                        heatmap = eval(HeatmapPlotExpr),
+                        waffle = eval(WafflePlotExpr)
                      )
-                     print(
-                        eval(
-                           switch(
-                              input$plot_type,
-                              upset = eval(UpSetPlotExpr),
-                              intdeg = eval(IntDegPlotExpr),
-                              heatmap = eval(HeatmapPlotExpr),
-                              waffle = eval(WafflePlotExpr)
-                           )
-                        )
-                     )
-                     dev.off()
-                  }
+                  )
                )
-
-            output$downloadSVG <-
-               downloadHandler(
-                  filename = glue::glue(
-                     "{format(Sys.time(), '%Y%m%d_%H%M%S')}_{input$plot_type}_plot.svg"
-                  ),
-                  content = function(file) {
-                     svg(
-                        file = file,
-                        width =
-                           switch(
-                              input$download_unit,
-                              inch = input$download_width,
-                              cm = input$download_width/2.54
-                           ),
-                        height =
-                           switch(
-                              input$download_unit,
-                              inch = input$download_height,
-                              cm = input$download_height/2.54
-                           ),
-                        bg = "transparent"
-                     )
-                     print(
-                        eval(
-                           switch(
-                              input$plot_type,
-                              upset = eval(UpSetPlotExpr),
-                              intdeg = eval(IntDegPlotExpr),
-                              heatmap = eval(HeatmapPlotExpr),
-                              waffle = eval(WafflePlotExpr)
-                           )
-                        )
-                     )
-                     dev.off()
-                  }
+               dev.off()
+            }
+         )
+      
+      output$downloadSVG <-
+         downloadHandler(
+            filename = glue::glue(
+               "{format(Sys.time(), '%Y%m%d_%H%M%S')}_{input$plot_type}_plot.svg"
+            ),
+            content = function(file) {
+               svg(
+                  file = file,
+                  width =
+                     switch(
+                        input$download_unit,
+                        inch = input$download_width,
+                        cm = input$download_width/2.54
+                     ),
+                  height =
+                     switch(
+                        input$download_unit,
+                        inch = input$download_height,
+                        cm = input$download_height/2.54
+                     ),
+                  bg = "transparent"
                )
-
-
-         }
-      )
-
-
-
-
+               print(
+                  eval(
+                     switch(
+                        input$plot_type,
+                        upset = eval(UpSetPlotExpr),
+                        intdeg = eval(IntDegPlotExpr),
+                        heatmap = eval(HeatmapPlotExpr),
+                        waffle = eval(WafflePlotExpr)
+                     )
+                  )
+               )
+               dev.off()
+            }
+         )      
+      
+      
    }
 )
