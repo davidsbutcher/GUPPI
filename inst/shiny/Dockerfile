@@ -3,7 +3,11 @@
 # docker build --tag davidsbutcher/guppi:releaseX --no-cache .
 
 # get shiny plus tidyverse packages image
-FROM rocker/shiny-verse:latest
+FROM rocker/shiny-verse:4.0.3
+
+# Install libraries needed for imagemagick
+RUN sudo apt update
+RUN sudo apt -y install libmagick++-6.q16-dev
 
 # install R packages from Bioconductor
 
@@ -12,9 +16,9 @@ RUN R -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages
 RUN R -e "BiocManager::install('GO.db')"
 RUN R -e "BiocManager::install('UniProt.ws')"
 
-RUN R -e "install.packages('devtools', repos='http://cran.rstudio.com/')"
-
 # install R packages from github
+
+RUN R -e "install.packages('devtools', repos='http://cran.rstudio.com/')"
 
 RUN R -e "devtools::install_github('davidsbutcher/GUPPI')"
 RUN R -e "devtools::install_github('davidsbutcher/viztools')"

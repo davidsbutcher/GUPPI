@@ -270,7 +270,9 @@ shinyUI(
                                 ),
                                 br(), br(),
                                 downloadButton("downloadReport", label = "GUPPI Report"),
+                                br(),
                                 downloadButton("downloadProteinReport", label = "Protein Report"),
+                                br(),
                                 downloadButton("downloadProteoformReport", label = "Proteoform Report")
                             ),
                             tabPanel(

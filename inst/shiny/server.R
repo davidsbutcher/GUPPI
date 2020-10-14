@@ -903,7 +903,7 @@ shinyServer(
          }
       )
       
-      # Create expression used to generate plots on-demand
+      # Plot expressions --------------------------------------------------------
       
       UpSetPlotExpr <-
          expr(
@@ -1053,8 +1053,6 @@ shinyServer(
                )
             }
          )
-      
-      # Plot expressions --------------------------------------------------------
       
       WafflePlotExpr <-
          expr(
