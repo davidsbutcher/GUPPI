@@ -1,6 +1,6 @@
 Package: GUPPI
 Title: Summarize, expand, and visualize the data in a TDReport file
-Version: 0.2.0.1
+Version: 0.2.0.2
 Authors@R: 
     person(given = "David",
            family = "Butcher",
