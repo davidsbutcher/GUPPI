@@ -308,7 +308,7 @@ if (fraction_number > 1) {
     purrr::flatten() %>%
     list() %>%
     rlang::set_names("1") %>% 
-    make_UpSet_plot()
+    viztools::make_UpSet_plot()
 } else {
   
   pander::pander("Only one fraction, no UpSet plot made") 
@@ -337,7 +337,7 @@ results_protein_allhits[[i]] %>%
   ) %>%
   purrr::flatten() %>%
   purrr::map(unique) %>% 
-  make_intersection_degree_plot(
+  viztools::make_intersection_degree_plot(
     Yrange = c(0, 100),
     plotType = "Proteoform"
   ) %>% 

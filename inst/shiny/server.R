@@ -6,7 +6,6 @@ library(dplyr)
 library(assertthat)
 library(tictoc)
 library(glue)
-#library(arrow)
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
@@ -670,7 +669,7 @@ shinyServer(
             listener_fracassign()
          },
          {
-         
+            
             if (is_valid() == TRUE) {
                
                if (input$tdrep_fracs == "Manual") {
@@ -766,6 +765,7 @@ shinyServer(
                      fdr = as.numeric(input$fdr),
                      makeDashboard = T,
                      dashboardPath = tempReport,
+                     staticDashboard = as.logical(input$tdrep_static),
                      saveOutput = T
                   )
                   
@@ -1031,8 +1031,12 @@ shinyServer(
                         }
                         
                         allhits_xlsx %>%
-                           dplyr::filter(`GlobalQvalue` == min(`GlobalQvalue`)) %>%
-                           dplyr::filter(`P-score` == min(`P-score`)) %>%
+                           dplyr::filter(
+                              `GlobalQvalue` == min(`GlobalQvalue`)
+                           ) %>%
+                           dplyr::filter(
+                              `P-score` == min(`P-score`)
+                           ) %>%
                            dplyr::filter(`C-score` == max(`C-score`)) %>%
                            dplyr::ungroup()
                         

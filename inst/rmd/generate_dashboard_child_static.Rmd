@@ -1,0 +1,408 @@
+`r paste('#', basename(filelist[[i]]), '{data-navmenu="TDReport Filename"}')`
+
+`r htmltools::tags$h3(basename(filelist[[i]]), style="text-align:center;color:#ffffff")`
+
+```{r setup, include=FALSE}
+
+# knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
+
+library(flexdashboard)
+library(shiny)
+library(shinydashboard)
+library(magrittr)
+library(stringr)
+library(forcats)
+library(purrr)
+library(UpSetR)
+library(ggplot2)
+library(DT)
+library(plotly)
+library(ggthemes)
+library(viridis)
+library(waffle)
+library(dplyr)
+library(magick)
+library(xfun)
+library(htmltools)
+library(mime)
+
+# Plotly parameters
+
+download_button_params <- 
+  list(
+    format = "svg",
+    width = 800,
+    height = 500
+  )
+
+# ggplot themes
+
+col_plot_theme <- 
+  list(
+    theme_minimal(),
+    theme(
+      axis.text.x = element_text(angle = 90),
+      panel.grid.major.x = element_blank()
+    )
+  )
+
+heatmap_theme <- 
+  list(
+    theme_minimal(),
+    theme(
+      text = element_text(size=16)
+    ) 
+  )
+
+# Find newest file function
+
+find_newest_file <-
+  function(
+    path
+  ) {
+    purrr::map_chr(
+      path,
+      ~fs::dir_info(.x) %>%
+        dplyr::filter(modification_time == max(modification_time)) %>%
+        dplyr::pull("path")
+    )
+  }
+
+```
+
+Row {.tabset .tabset-fade data-height=175}
+-------------------------------------
+
+### Identifications Tables
+
+In a static GUPPI report, embedded protein and proteoform results can be downloaded in .xlsx format using the following links:
+
+```{r}
+
+xfun::embed_file(
+  find_newest_file(
+    fs::path(
+      outputdir,
+      "protein_results"
+    )
+  ),
+  text = "Download protein results"
+)
+
+```
+
+```{r}
+
+xfun::embed_file(
+  find_newest_file(
+    fs::path(
+      outputdir,
+      "proteoform_results"
+    )
+  ),
+  text = "Download proteoform results"
+)
+
+```
+
+
+
+Row {.tabset .tabset-fade}
+-------------------------------------
+
+### Protein Counts by Fraction
+
+```{r, out.width = "100%", dpi = 300}
+
+results_protein[[i]] %>% 
+  group_by(fraction) %>% 
+  summarise("protein count" = n()) %>%
+  ggplot() +
+  geom_col(
+    aes(fraction, `protein count`),
+    color = "black",
+    fill = "#4C4184",
+    size = 0.25
+  ) +
+  labs(
+    x = "Fraction",
+    y = "Protein Count"
+  ) +
+  col_plot_theme
+
+
+```
+
+### Protein Counts by Filename
+
+``` {r}
+
+results_protein[[i]] %>% 
+  group_by(filename) %>% 
+  summarise("protein count" = n()) %>%
+  mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>% 
+  # mutate(filename = stringr::str_trunc(filename, 40, side = "left")) %>%
+  ggplot() +
+  geom_col(
+    aes(filename, `protein count`),
+    color = "black",
+    fill = "#4C4184",
+    size = 0.25
+  ) +
+  labs(
+    x = "Filename",
+    y = "Protein Count"
+  ) +
+  guides(
+    color = "none",
+    fill = "none"
+  ) +
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 8)) +
+  col_plot_theme
+
+
+```
+
+
+Row
+-------------------------------------
+
+### Proteoform Identifications, UpSet Plot
+
+```{r dpi=300, echo=FALSE}
+
+fraction_number <- 
+  results_protein_allhits[[i]] %>% 
+  dplyr::pull(
+    fraction
+  ) %>% 
+  unique() %>% 
+  length()
+
+if (fraction_number > 1) {
+  results_protein_allhits[[i]] %>% 
+    dplyr::select(
+      ProteoformRecordNum,
+      fraction
+    ) %>%
+    dplyr::arrange(fraction) %>%
+    tidyr::pivot_wider(
+      names_from = fraction,
+      values_from =
+        "ProteoformRecordNum",
+      values_fn = list,
+      names_prefix = "Frac_"
+    ) %>%
+    purrr::flatten() %>%
+    list() %>%
+    rlang::set_names("1") %>% 
+    viztools::make_UpSet_plot()
+} else {
+  
+  pander::pander("Only one fraction, no UpSet plot made") 
+  
+}
+
+```
+
+
+### Proteoform Identifications, Intersection Degree Plot
+
+```{r}
+
+results_protein_allhits[[i]] %>% 
+  dplyr::select(
+    ProteoformRecordNum,
+    fraction
+  ) %>%
+  dplyr::arrange(fraction) %>%
+  tidyr::pivot_wider(
+    names_from = fraction,
+    values_from =
+      ProteoformRecordNum,
+    values_fn = list,
+    names_prefix = "Frac_"
+  ) %>%
+  purrr::flatten() %>%
+  purrr::map(unique) %>% 
+  viztools::make_intersection_degree_plot(
+    Yrange = c(0, 100),
+    plotType = "Proteoform"
+  )
+
+```
+
+Row {data-height=500}
+-------------------------------------
+
+### Proteoform Identifications, Heatmap (Bin size = 1 kDa)
+
+```{r}
+
+results_protein_allhits[[i]] %>% 
+  dplyr::group_by(
+    ProteoformRecordNum,
+    fraction
+  ) %>% 
+  viztools::make_heatmap(
+    plotType = "Proteoform",
+    orientation = "v",
+    binSize = 1000,
+    massColname = "ObservedPrecursorMass",
+    fractionColname = "fraction"
+  )
+
+```
+
+### Proteoform Identifications Heatmap, Result Sets (Bin size = 1 kDa)
+
+```{r}
+
+results_proteoform[[i]] %>% 
+  dplyr::mutate(ResultSet = stringr::str_wrap(ResultSet,10)) %>%
+  ggplot(aes(ObservedPrecursorMass/1000, ResultSet)) +
+  geom_bin2d(aes(group = ResultSet), position = "identity", stat = "bin2d") +
+  scale_fill_viridis_c(option = "C", direction = -1) +
+  labs(
+    x = "Mass Bin (kDa)",
+    y = "Result Set"
+  ) +
+  theme_minimal() +
+  theme(text = ggplot2::element_text(size=18))
+
+
+
+```
+
+Row
+-------------------------------------
+
+### Protein Identifications, Waffle Plot
+
+```{r echo=FALSE, message=FALSE, out.width="100%"}
+
+waffle1 <- 
+  results_protein_countsbyfraction %>%
+  dplyr::filter(tdreport_name == basename(filelist[[i]])) %>%
+  dplyr::ungroup() %>% 
+  dplyr::select(-tdreport_name) %>% 
+  viztools::waffle_iron(
+    fraction_colname = "fraction"
+  )
+
+fig1 <- image_graph(height = 2400, width = 3200, res = 300)
+
+waffle1
+
+dev.off()
+
+magick::image_trim(fig1)
+
+
+```
+
+Row
+-------------------------------------
+
+### Hit Count vs. Intact Monoisotopic Mass, Linear Scale
+
+```{r}
+
+allhits_sum <- 
+  results_protein_allhits[[i]] %>% 
+  mutate(MonoisotopicMass = MonoisotopicMass/1000) %>% 
+  dplyr::rename(`MonoisotopicMass (kDa)` = MonoisotopicMass) %>% 
+  group_by(
+    AccessionNumber,
+    `MonoisotopicMass (kDa)`
+  ) %>% 
+  summarize(`Hit Count` = n()) %>% 
+  ungroup()
+
+allhits_sum %>% 
+  ggplot(aes(`MonoisotopicMass (kDa)`, `Hit Count`)) +
+  geom_point(size = 1) +
+  labs(
+    x = "Intact Monoisotopic Mass (kDa)",
+    y = "Hit Count"
+  ) +
+  scale_x_continuous(
+    breaks = scales::pretty_breaks()
+  ) +
+  scale_size_identity() +
+  theme_minimal() +
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.line = element_line(color = "black"),
+    axis.ticks = element_line(color = "black"),
+    text = element_text(size = 12)
+  )
+
+
+```
+
+### Hit Count vs. Intact Monoisotopic Mass, Log10 Scale
+
+```{r}
+
+allhits_sum %>% 
+  ggplot(aes(`MonoisotopicMass (kDa)`, log10(`Hit Count`))) +
+  geom_point(size = 1) +
+  labs(
+    x = "Intact Monoisotopic Mass (kDa)",
+    y = "Log10(Hit Count)"
+  ) +
+  scale_x_continuous(
+    breaks = scales::pretty_breaks()
+  ) +
+  scale_size_identity() +
+  theme_minimal() +
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.line = element_line(color = "black"),
+    axis.ticks = element_line(color = "black"),
+    text = element_text(size = 12)
+  )
+
+```
+
+
+Row
+-------------------------------------
+
+### -log10(Q-value) vs. Intact Monoisotopic Mass
+
+```{r, out.width = "100%", dpi = 300}
+
+allhits_qvals <- 
+  results_proteoform[[i]] %>%
+  mutate(MonoisotopicMass = MonoisotopicMass/1000) %>% 
+  dplyr::rename(`MonoisotopicMass (kDa)` = MonoisotopicMass)
+
+allhits_qvals %>% 
+  ggplot(aes(`MonoisotopicMass (kDa)`, -log10(GlobalQvalue))) +
+  geom_point(size = 1) +
+  labs(
+    x = "Intact Monoisotopic Mass (kDa)",
+    y = "-Log10(Global Q-value)"
+  ) +
+  scale_x_continuous(
+    breaks = scales::pretty_breaks()
+  ) +
+  scale_size_identity() +
+  theme_minimal() +
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.line = element_line(color = "black"),
+    axis.ticks = element_line(color = "black"),
+    text = element_text(size = 12)
+  )
+
+```
+

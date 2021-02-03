@@ -14,6 +14,7 @@ guppi(
   fdr = 0.01,
   saveOutput = TRUE,
   makeDashboard = FALSE,
+  staticDashboard = TRUE,
  
     dashboardPath = glue::glue("{outputdir}/report/{format(Sys.time(), '\%Y\%m\%d_\%H\%M\%S')}_dashboard.html")
 )
@@ -47,8 +48,11 @@ Defaults to 0.01 (1\%).}
 report, etc. are saved to output directory. Doesn't effect GUPPI report. 
 Defaults to TRUE.}
 
-\item{makeDashboard}{Boolean values. Controls whether GUPPI report is rendered 
+\item{makeDashboard}{Boolean value. Controls whether GUPPI report is rendered 
 to the output directory. Defaults to FALSE.}
+
+\item{staticDashboard}{Boolean value. Controls whether the dashboard should be
+generated with dynamic visualization based on Plotly or with static images.}
 
 \item{dashboardPath}{Full path and name of dashboard output (i.e. GUPPI report). 
 Defaults to /report subdirectory of the output directory.}

@@ -1,6 +1,6 @@
 Package: GUPPI
 Title: Summarize, expand, and visualize the data in a TDReport file
-Version: 0.2.0.2
+Version: 0.2.0.3
 Authors@R: 
     person(given = "David",
            family = "Butcher",
@@ -118,6 +118,7 @@ Imports:
 	tictoc,
 	tidyr,
 	tidyselect,
+	tippy,
 	UniProt.ws,
 	UpSetR,
 	usethis,

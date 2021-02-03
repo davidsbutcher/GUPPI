@@ -25,8 +25,10 @@
 #' @param saveOutput Boolean value. Controls whether protein report, proteoform 
 #' report, etc. are saved to output directory. Doesn't effect GUPPI report. 
 #' Defaults to TRUE.
-#' @param makeDashboard Boolean values. Controls whether GUPPI report is rendered 
+#' @param makeDashboard Boolean value. Controls whether GUPPI report is rendered 
 #' to the output directory. Defaults to FALSE.
+#' @param staticDashboard Boolean value. Controls whether the dashboard should be
+#' generated with dynamic visualization based on Plotly or with static images.
 #' @param dashboardPath Full path and name of dashboard output (i.e. GUPPI report). 
 #' Defaults to /report subdirectory of the output directory.
 #' 
@@ -65,6 +67,7 @@ guppi <-
       fdr = 0.01,
       saveOutput = TRUE,
       makeDashboard = FALSE,
+      staticDashboard = FALSE,
       dashboardPath = glue::glue(
          "{outputdir}/report/{format(Sys.time(), '%Y%m%d_%H%M%S')}_dashboard.html"
       )
@@ -110,7 +113,19 @@ guppi <-
          msg = "makeDashboard should be TRUE or FALSE"
       )
       
-      # Get path to data file ---------------------------------------------------
+      assertthat::assert_that(
+         assertthat::is.flag(staticDashboard),
+         msg = "staticDashboard should be TRUE or FALSE"
+      )
+      
+      assertthat::assert_that(
+         assertthat::is.dir(fs::path_dir(dashboardPath)),
+         msg = "dashboardPath parent is not a recognized path"
+      )
+      
+      
+      
+      ## Check file extensions ------------------------------------------------
       
       filelist <-
          get_data_path(
@@ -119,11 +134,52 @@ guppi <-
             tools::file_ext(filename)
          )
       
+      extension <-
+         filelist %>%
+         purrr::map(tools::file_ext)
+      
+      assertthat::assert_that(
+         assertthat::assert_that(
+            length(unique(extension)) <= 1
+         ),
+         msg = "More than one file extension present. Only one type of file is allowed."
+      )
+      
+      assertthat::assert_that(
+         assertthat::assert_that(
+            length(extension) != 0
+         ),
+         msg = "No acceptable input files. Only tdReport, csv, or xlsx are allowed."
+      )
+      
+      # Check for allowed extensions, case insensitive
+      
+      allowed_extensions <- c("tdReport", "csv", "tsv", "xlsx")
+      
+      assertthat::assert_that(
+         purrr::map_chr(
+            extension,
+            ~stringr::str_detect(
+               .x, fixed(allowed_extensions, ignore_case = TRUE)
+            ) %>% 
+               any()
+         ) %>% 
+            as.logical() %>% 
+            all(),
+         msg = 
+            paste0(
+               "All extensions must be one of",
+               paste(allowed_extensions, collapse = ", ")
+            )
+      )
+      
       # Load input files --------------------------------------------------------
       
       # Start timer
       
       tictoc::tic()
+      
+      ## Load/download UniProt database ------------------------------------------
       
       # Check for predownloaded UP database
       
@@ -157,24 +213,20 @@ guppi <-
       } else {
          
          UPdatabase <-
-            download_UP_database(taxonNumber)
+            download_UP_database(
+               taxonNumber,
+               saveUPdata = TRUE
+            )
          
       }
+      
+      
+      ## Load GO locations correlation table -------------------------------------
       
       # Load file containing locations corresponding to
       # GO terms, either bacteria or eukaryota
       
       if (GOLocType == "bacteria") {
-         
-         # go_locs <-
-         #    read.csv(
-         #       system.file(
-         #          "extdata",
-         #          "GO_cellular_component_taxon2_bacteria.csv",
-         #          package = "GUPPI"
-         #       )
-         #    ) %>%
-         #    dplyr::pull("GO_term")
          
          go_locs_table <-
             read.csv(
@@ -187,16 +239,6 @@ guppi <-
          
       } else if (GOLocType == "eukaryota") {
          
-         # go_locs <-
-         #    read.csv(
-         #       system.file(
-         #          "extdata",
-         #          "GO_cellular_component_taxon2759_eukaryota.csv",
-         #          package = "GUPPI"
-         #       )
-         #    ) %>%
-         #    dplyr::pull("GO_term")
-         
          go_locs_table <-
             read.csv(
                system.file(
@@ -207,6 +249,9 @@ guppi <-
             )
          
       }
+      
+      
+      ## Load modifications data ----------------------------------------------
       
       # Load file containing all the PTM information from TDreport
       # (sourced from UniMod, PSI-MOD, etc.)
@@ -226,21 +271,14 @@ guppi <-
       
       systime <- format(Sys.time(), "%Y%m%d_%H%M%S")
       
-      # Read Data Files -----------------------------------------------------------------------------
+      ## Read Data Files -----------------------------------------------------------------------------
       
-      extension <-
-         filelist %>%
-         purrr::map(tools::file_ext)
+      # XXX NEED NEW FUNCTION HERE TO READ INPUT FILES AND GET ITS TYPE! THEN 
+      # SWITCH STATEMENT TO CHOOSE FUNCTIONS FOR READING??
       
-      if (length(unique(extension)) > 1) {
-         
-         stop("More than one kind of input file. Try again.")
-         
-      } else if (length(extension) == 0) {
-         
-         stop("No acceptable input files. Only tdReport, csv, or xlsx are allowed.")
-         
-      } else if (extension[[1]] == "csv") {
+      
+       
+      if (extension[[1]] == "csv") {
          
          message("Reading csv files...")
          
@@ -271,7 +309,6 @@ guppi <-
                fdr_cutoff = fdr
             )
          
-         
          message("\nReading full protein data from tdReport\n")
          
          proteinlistfull <-
@@ -300,7 +337,7 @@ guppi <-
       
       names(proteinlist) <- filelist
       
-      # Process protein results ------------------------------------------------
+      ## Process protein results ------------------------------------------------
       
       results_protein <-
          proteinlist %>%
@@ -349,7 +386,6 @@ guppi <-
          unlist(filelist) %>%
          basename()
       
-      
       # Proteoform results, all hits, hit counts
       # This is joined with results_proteoform later to include the hit counts
       # in the pform report
@@ -367,28 +403,8 @@ guppi <-
          ) %>%
          purrr::reduce(dplyr::union_all)
       
-      # Proteoform results, best hits per-fraction
       
-      # results_protein_allhits %>%
-      #    purrr::map(
-      #       ~{
-      #          filter(.x, GlobalQvalue <= fdr) %>%
-      #             select(-c("HitId")) %>%
-      #             select(fraction, everything()) %>%
-      #             group_by(fraction, ProteoformRecordNum) %>%
-      #             filter(
-      #                GlobalQvalue == min(GlobalQvalue) &
-      #                   `P-score` == min(`P-score`) &
-      #                   `C-score` == max(`C-score`)
-      #             ) %>%
-      #             distinct() %>%
-      #             ungroup()
-      #       }
-      #    ) %>% .[[1]] %>% View
-      
-      
-      
-      # Process proteoform results ----------------------------------------------
+      ## Process proteoform results ----------------------------------------------
       
       # For TDReports without proteoform record nums (i.e. current version of
       # ProSightPD) replace them with sequential numbers
@@ -505,11 +521,9 @@ guppi <-
       
       if (saveOutput == TRUE) {
          
-         if (dir.exists(outputdir) == FALSE) {
-            dir.create(outputdir)
-         }
+         if (dir.exists(outputdir) == FALSE) dir.create(outputdir)
          
-         # Protein results
+         ## Save protein results ------------
          
          for (i in seq_along(names(results_protein))) {
             
@@ -536,7 +550,7 @@ guppi <-
             writexl::write_xlsx(path = resultsname)
          
          
-         # Protein results, counts by fraction
+         ## Save protein results, counts by fraction ------------
          
          if (dir.exists(glue::glue("{outputdir}/protein_results_countsbyfraction")) == FALSE) {
             dir.create(glue::glue("{outputdir}/protein_results_countsbyfraction"))
@@ -552,7 +566,7 @@ guppi <-
             writexl::write_xlsx(path = resultsname)
          
          
-         # Protein results, all hits
+         ## Save protein results, all hits ------------
          
          
          if (dir.exists(glue::glue("{outputdir}/protein_results_allhits")) == FALSE) {
@@ -569,7 +583,7 @@ guppi <-
                ~writexl::write_xlsx(.y, path = .x)
             )
          
-         # Proteoform results
+         ## Save proteoform results ------------
          
          for (i in seq_along(names(results_proteoform))) {
             

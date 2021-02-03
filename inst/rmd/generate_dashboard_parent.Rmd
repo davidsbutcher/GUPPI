@@ -103,87 +103,112 @@ Fraction assignment: `r fracAss`
 
 GUPPI version: `r GUPPI_version`
 
-Row {data-height=600}
+GUPPI report type: `r if (staticDashboard == FALSE) "Dynamic (includes HTML widgets)" else "Static"`
+
+Row {data-height=400}
 -----------------------------------------------------------------------
 
 ### `r htmltools::tags$h4("PTM summary")`
 
 ```{r}
 
-results_proteoform_modcounts %>% 
-  dplyr::select(tdreport_name, dplyr::everything()) %>% 
-  DT::datatable(
-    extensions = c("Buttons", "Scroller"),
-    class = "wrap",
-    options = list(
-      autoWidth = TRUE,
-      deferRender = TRUE,
-      scrollY = "425px",
-      scrollX = "600px",
-      scroller = TRUE,
-      columnDefs = list(
-        list(
-          className = 'dt-center'
-        )
-      ),
-      dom = "Bfrtip",
-      buttons = c("copy", "csv", "excel", "colvis")
+PTM_summary_table <- 
+  results_proteoform_modcounts %>% 
+  dplyr::select(tdreport_name, dplyr::everything())
+
+if (staticDashboard == FALSE) {
+  
+  PTM_summary_table %>% 
+    DT::datatable(
+      extensions = c("Buttons", "Scroller"),
+      class = "wrap",
+      options = list(
+        autoWidth = TRUE,
+        deferRender = TRUE,
+        scrollY = "425px",
+        scrollX = "600px",
+        scroller = TRUE,
+        columnDefs = list(
+          list(
+            className = 'dt-center'
+          )
+        ),
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel", "colvis")
+      )
+    ) %>% 
+    DT::formatStyle(
+      1:length(results_resultparameters),
+      fontSize = "9"
+    ) %>% 
+    DT::formatStyle(
+      3,
+      columnWidth = "100px",
+      fontSize = "6"
     )
-  ) %>% 
-  DT::formatStyle(
-    1:length(results_resultparameters),
-    fontSize = "9"
-  ) %>% 
-  DT::formatStyle(
-    3,
-    columnWidth = "100px",
-    fontSize = "6"
-  )
+  
+} else {
+  
+  knitr::kable(PTM_summary_table) 
+  
+}
 
 ```
 
-Row {data-height=600}
+Row {data-height=400}
 -----------------------------------------------------------------------
 
 ### `r htmltools::tags$h4("Search parameters")`
 
 ```{r}
 
-results_resultparameters %>% 
+
+search_parameters_table <- 
+  results_resultparameters %>% 
   dplyr::mutate(
     Value = 
       stringr::str_replace_all(Value, stringr::fixed(","), ";")
   ) %>% 
   dplyr::select(
     tdreport_name, ResultSet, Name, Value, IsActive, GroupName, dplyr::everything()
-  ) %>% 
-  DT::datatable(
-    extensions = c("Buttons", "Scroller"),
-    class = "wrap",
-    options = list(
-      autoWidth = TRUE,
-      deferRender = TRUE,
-      scrollY = "425px",
-      scrollX = "600px",
-      scroller = TRUE,
-      columnDefs = list(
-        list(
-          className = 'dt-center'
-        )
-      ),
-      dom = "Bfrtip",
-      buttons = c("copy", "csv", "excel", "colvis")
-    )
-  ) %>% 
-  DT::formatStyle(
-    1:length(results_resultparameters),
-    fontSize = "9"
-  ) %>% 
-  DT::formatStyle(
-    3,
-    columnWidth = "100px",
-    fontSize = "6"
   )
+
+if (staticDashboard == FALSE) {
+  
+  search_parameters_table %>% 
+    DT::datatable(
+      extensions = c("Buttons", "Scroller"),
+      class = "wrap",
+      options = list(
+        autoWidth = TRUE,
+        deferRender = TRUE,
+        scrollY = "425px",
+        scrollX = "600px",
+        scroller = TRUE,
+        columnDefs = list(
+          list(
+            className = 'dt-center'
+          )
+        ),
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel", "colvis")
+      )
+    ) %>% 
+    DT::formatStyle(
+      1:length(results_resultparameters),
+      fontSize = "9"
+    ) %>% 
+    DT::formatStyle(
+      3,
+      columnWidth = "100px",
+      fontSize = "6"
+    )
+  
+} else {
+  
+  knitr::kable(search_parameters_table)
+  
+}
 
 ```
 
@@ -278,7 +303,11 @@ for (i in seq_along(filelist)) {
     knitr::knit_child(
       system.file(
         "rmd",
-        "generate_dashboard_child.Rmd",
+        if (staticDashboard == FALSE) {
+          "generate_dashboard_child.Rmd"
+        } else {
+          "generate_dashboard_child_static.Rmd"
+        },
         package = "GUPPI"
       )    
     )
@@ -294,13 +323,23 @@ for (i in seq_along(filelist)) {
 
 <br>
 
-GUPPI is developed by [David S. Butcher](http://www.davidsbutcher.com) and provided as a service by the biological applications subgroup of the ICR group at the [National High Magnetic Field Laboratory](http://www.nationalmaglab.org).
+This report was generated using [GUPPI](https://tdpapps.magnet.fsu.edu), which is developed by [David S.
+Butcher](http://www.davidsbutcher.com) and provided as a service by the
+biological applications subgroup of the [ICR User Facility](https://nationalmaglab.org/user-facilities/icr) at the [National High Magnetic
+Field Laboratory](http://www.nationalmaglab.org).
 
-`r fa("readme")` [Read the package documentation](http://davidsbutcher.github.io/GUPPI/)
+GUPPI development is supported by the National Science Foundation Division of Chemistry through DMR-1644779 and the State of Florida. All packages used in the creation of GUPPI are licensed as stated in their documentation and their inclusion does not imply support or endorsement from their respective developers. 
 
-`r fa("github")` [View source code on Github](http://github.com/davidsbutcher/GUPPI)
+![NHMFL Logo](../css/icr-shinyproxy-header.png)![NSF Logo](../css/NSF_logo_header.png)
 
-`r fa("envelope")` [Contact the package author](mailto:dbutcher@magnet.fsu.edu)
+<i class="fab fa-readme fa-3x"></i> [Read the
+package documentation](http://davidsbutcher.github.io/GUPPI/)
+
+<i class="fab fa-github fa-3x"></i> [View source
+code on Github](http://github.com/davidsbutcher/GUPPI)
+
+<i class="fa fa-envelope fa-3x"></i> [Contact the
+package author](mailto:dbutcher@magnet.fsu.edu) for general questions and new database requests
 
 <br>
 

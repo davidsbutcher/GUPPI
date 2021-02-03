@@ -833,9 +833,73 @@ get_result_parameters <-
 
       DBI::dbDisconnect(con)
 
-      message("read_tdreport_protein Finished!")
+      message("get_result_parameters Finished!")
 
       return(output)
 
 
+   }
+
+
+#' Determine top-down software suite
+#'
+#' @param resultsFile A results file taken from top-down analysis by TopPIC,
+#' MSPathfinder, etc.
+#'
+#' @return String indicating the software suite the results file came from.
+#'
+#'
+ 
+determine_software <- 
+   function(
+      resultsFile
+   ){
+      
+      # Assertions --------------------------------------------------------------
+      
+      assertthat::assert_that(
+         assertthat::is.readable(resultsFile),
+         msg = "resultsFile is not a readable file"
+      ) 
+      
+      # Try to determine software -----------------------------------------------
+      
+      # Read the top 50 lines of the results. This should be more than enough
+      # to determine identity, and saves time
+      
+      lines <- 
+         readr::read_lines(
+            resultsFile,
+            n_max = 50
+         )
+      
+      # Check for column names found in MSPathfinder output
+      
+      mspath_colnames <- 
+         c(
+            "Scan", "Pre", "Sequence", "Post", "Modifications", "Composition",
+            "ProteinName", "ProteinDesc", "ProteinLength", "Start", "End",
+            "Charge", "MostAbundantIsotopeMz", "Mass", "Ms1Features",
+            "#MatchedFragments", "Probability", "SpecEValue", "EValue",
+            "QValue", "PepQValue"
+         )
+      
+      results_colnames <- 
+         stringr::str_split(lines[1], "\t")
+      
+      if (all(mspath_colnames == results_colnames)) return("mspathfinder")
+      
+      
+      # Check for presence of "** Parameters **" line found in TopPIC output
+      
+      toppic_format <- 
+         stringr::str_detect(lines, stringr::fixed("** Parameters **")) %>% 
+         any()
+      
+      if (toppic_format == TRUE) return("toppic")
+      
+      # If all tests above fail, return "unknown"
+      
+      return("unknown")   
+      
    }

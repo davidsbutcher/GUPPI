@@ -7,5 +7,5 @@
 run_shiny_app()
 }
 \description{
-A simple function which runs the GUPPI Shiny applicatio in a local browser.
+A simple function which runs the GUPPI Shiny application in a local browser.
 }
