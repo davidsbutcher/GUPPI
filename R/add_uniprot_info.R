@@ -9,7 +9,7 @@
 
 add_uniprot_info <-
    function(
-      listofproteins,
+      rawProteinList,
       database = NULL,
       tdrep = TRUE
    ) {
@@ -18,32 +18,34 @@ add_uniprot_info <-
 
       # Find column in the input tibble which has "accession"
       # in it and use it to get info from UniProt
-
+      
+      if (all(is.na(rawProteinList) == TRUE)) return(NA)
+      
       accession_name <-
          grep(
             "accession",
-            names(listofproteins),
+            names(rawProteinList),
             ignore.case = TRUE,
             value = TRUE
          )
 
       if (tdrep == TRUE) {
 
-         listofproteins <-
-            listofproteins %>%
+         rawProteinList <-
+            rawProteinList %>%
             dplyr::rename(
                "UNIPROTKB" := !!accession_name
             )
 
       } else {
 
-         listofproteins <-
+         rawProteinList <-
             tibble(
-               UNIPROTKB = pull(listofproteins, accession_name)
+               UNIPROTKB = pull(rawProteinList, accession_name)
             )
 
       }
 
-      dplyr::left_join(listofproteins, database)
+      dplyr::left_join(rawProteinList, database)
 
    }

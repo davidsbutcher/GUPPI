@@ -1,44 +1,4 @@
 
-library(magrittr)
-library(GUPPI)
-library(viztools)
-library(dplyr)
-library(assertthat)
-library(tictoc)
-library(glue)
-library(shiny)
-library(shinydashboard)
-library(shinyWidgets)
-library(shinyjs)
-library(shinyFiles)
-library(purrr)
-library(Peptides)
-library(stringr)
-library(forcats)
-library(rmarkdown)
-library(flexdashboard)
-library(tibble)
-library(knitr)
-library(UpSetR)
-library(pander)
-library(ggplot2)
-library(DT)
-library(plotly)
-library(ggthemes)
-library(viridis)
-library(waffle)
-library(RSQLite)
-library(DBI)
-library(GO.db)
-library(fs)
-library(dbplyr)
-library(tidyr)
-library(Biobase)
-library(UniProt.ws)
-library(AnnotationDbi)
-library(writexl)
-library(readxl)
-library(sessioninfo)
 
 options(repos = BiocManager::repositories())
 
@@ -63,7 +23,7 @@ find_newest_file <-
 kickout <-
    function(
       list,
-      allowed_ext = c("tdReport", "csv", "xlsx")
+      allowed_ext = c("tdReport", "csv", "tsv", "xlsx")
    ) {
       
       # This function removes any element from the list of input files
@@ -544,19 +504,19 @@ shinyServer(
          }
       )
       
-      observeEvent(
-         listener_upload(),
-         {
-            if(is.null(tdrep_name()) == FALSE && !(all(has_extension_multi(tdrep_name(), "tdReport")))) {
-               showModal(
-                  modalDialog(
-                     title = "Invalid file",
-                     "You must upload a tdReport file"
-                  )
-               )   
-            }
-         }
-      )
+      # observeEvent(
+      #    listener_upload(),
+      #    {
+      #       if(is.null(tdrep_name()) == FALSE && !(all(has_extension_multi(tdrep_name(), "tdReport")))) {
+      #          showModal(
+      #             modalDialog(
+      #                title = "Invalid file",
+      #                "You must upload a tdReport file"
+      #             )
+      #          )   
+      #       }
+      #    }
+      # )
       
       # Code to run after a tdRep is uploaded to the SERVER or LOCAL FILESYSTEM
       

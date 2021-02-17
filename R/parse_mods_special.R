@@ -36,7 +36,7 @@ parse_mods_special <-
          tidyr::separate_rows(
             "ModificationHash",
             sep = "\\|"
-         ) %>%
+         ) %>% 
          tidyr::separate(
             "ModificationHash",
             c("ModSet", "ModID", "ModLoc"),

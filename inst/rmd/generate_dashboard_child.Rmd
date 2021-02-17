@@ -1,6 +1,6 @@
-`r paste('#', basename(filelist[[i]]), '{data-navmenu="TDReport Filename"}')`
+`r paste('#', basename(fileList[[i]]), '{data-navmenu="Results File Name"}')`
 
-`r htmltools::tags$h3(basename(filelist[[i]]), style="text-align:center;color:#ffffff")`
+`r htmltools::tags$h3(basename(fileList[[i]]), style="text-align:center;color:#ffffff")`
 
 ```{r setup, include=FALSE}
 
@@ -22,6 +22,22 @@ library(viridis)
 library(waffle)
 library(dplyr)
 library(magick)
+
+fraction_number_protein <- 
+  results_protein[[i]] %>% 
+  dplyr::pull(
+    fraction
+  ) %>% 
+  unique() %>% 
+  length()
+
+filename_number_protein <- 
+  results_protein[[i]] %>% 
+  dplyr::pull(
+    filename
+  ) %>% 
+  unique() %>% 
+  length()
 
 # Plotly parameters
 
@@ -53,12 +69,12 @@ heatmap_theme <-
 
 ```
 
-Row {.tabset .tabset-fade data-height=750}
--------------------------------------
+```{r echo=FALSE, eval=!is.na(results_protein[[i]])}
 
-### Protein Identifications
-
-```{r echo=FALSE}
+knitr::asis_output("\n")
+knitr::asis_output("Row {data-height:400}\n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Protein Identifications\n")
 
 results_protein[[i]] %>%
   mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>%
@@ -67,17 +83,12 @@ results_protein[[i]] %>%
       stringr::str_trunc(`PROTEIN-NAMES`, 60, "right", ellipsis = "..."
       )
   ) %>% 
-  mutate(GlobalQvalue = formatC(GlobalQvalue, format = "e", digits = 3)) %>%
-  mutate(GRAVY = formatC(GRAVY, format = "f", digits = 3)) %>% 
-  mutate(MonoisotopicMass = formatC(MonoisotopicMass, format = "f", digits = 4)) %>% 
-  mutate(AverageMass = formatC(AverageMass, format = "f", digits = 4)) %>%
+  # mutate(GRAVY = formatC(GRAVY, format = "f", digits = 3)) %>% 
+  # mutate(MonoisotopicMass = formatC(MonoisotopicMass, format = "f", digits = 4)) %>% 
+  # mutate(AverageMass = formatC(AverageMass, format = "f", digits = 4)) %>%
   dplyr::select(
     "UNIPROTKB",
     "PROTEIN-NAMES",
-    "GlobalQvalue",
-    "ObservedPrecursorMass",
-    "MonoisotopicMass",
-    "GRAVY",
     "fraction",
     "filename",
     everything()
@@ -85,10 +96,6 @@ results_protein[[i]] %>%
   dplyr::rename(
     "UniProt Accession" = UNIPROTKB,
     "Protein Name" = `PROTEIN-NAMES`,
-    "Global Q-value" = GlobalQvalue,
-    "Obs. Precursor Mass" = ObservedPrecursorMass,
-    "Monoiso. Mass" = MonoisotopicMass,
-    "GRAVY Score" = GRAVY,
     "Fraction" = fraction,
     "Filename" = filename
   ) %>% 
@@ -97,9 +104,9 @@ results_protein[[i]] %>%
     class = "hover",
     options = list(
       deferRender = TRUE,
-      scrollY = 550,
+      scrollY = 400,
       scrollX = TRUE,
-      scroller = TRUE,
+      # scroller = TRUE,
       columnDefs = list(
         list(
           visible = FALSE,
@@ -122,9 +129,15 @@ results_protein[[i]] %>%
 
 ```
 
-### Proteoform Identifications
+<!-- Row {data-height:400} -->
+<!-- ------------------------------------- -->
 
-```{r}
+```{r echo=FALSE, eval=!is.na(results_proteoform[[i]])}
+
+knitr::asis_output("\n")
+knitr::asis_output("Row {data-height:400}\n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Proteoform Identifications\n")
 
 results_proteoform[[i]] %>%
   mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>%
@@ -133,33 +146,21 @@ results_proteoform[[i]] %>%
       stringr::str_trunc(`PROTEIN-NAMES`, 60, "right", ellipsis = "..."
       )
   ) %>% 
-  mutate(GlobalQvalue = formatC(GlobalQvalue, format = "e", digits = 2)) %>%
-  mutate(GRAVY = formatC(GRAVY, format = "f", digits = 3)) %>% 
-  mutate(MonoisotopicMass = formatC(MonoisotopicMass, format = "f", digits = 4)) %>% 
-  mutate(AverageMass = formatC(AverageMass, format = "f", digits = 4)) %>%
   dplyr::select(
     "UNIPROTKB",
-    "ProteoformRecordNum",
     "PROTEIN-NAMES",
-    "GlobalQvalue",
-    "ObservedPrecursorMass",
-    "MonoisotopicMass",
-    "Modification",
     "HitCount",
-    "GRAVY",
+    dplyr::any_of(
+      c("ProteoformSequence_GRAVY", "IntactProteinSequence_GRAVY")
+    ),
     "fraction",
     "filename",
     everything()
   ) %>%
   dplyr::rename(
     "UniProt Accession" = UNIPROTKB,
-    "Proteoform Record Num." = ProteoformRecordNum,
     "Protein Name" = `PROTEIN-NAMES`,
-    "Global Q-value" = GlobalQvalue,
-    "Obs. Precursor Mass" = ObservedPrecursorMass,
-    "Monoiso. Mass" = MonoisotopicMass,
     "Hit Count" = HitCount,
-    "GRAVY Score" = GRAVY,
     "Fraction" = fraction,
     "Filename" = filename
   ) %>% 
@@ -168,9 +169,9 @@ results_proteoform[[i]] %>%
     class = "hover",
     options = list(
       deferRender = TRUE,
-      scrollY = 550,
+      scrollY = 400,
       scrollX = TRUE,
-      scroller = TRUE,
+      # scroller = TRUE,
       columnDefs = list(
         list(
           visible = FALSE,
@@ -191,14 +192,16 @@ results_proteoform[[i]] %>%
     digits = 3
   )
 
+
 ```
 
-Row {.tabset .tabset-fade}
--------------------------------------
 
-### Protein Counts by Fraction
+```{r eval=(fraction_number_protein > 1)}
 
-```{r}
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Protein Counts by Fraction\n")
 
 plot <- 
   results_protein[[i]] %>% 
@@ -230,17 +233,22 @@ plotly::ggplotly(plot) %>%
     )
   )
 
+
 ```
 
-### Protein Counts by Filename
+``` {r eval=!all(is.na(results_protein[[i]])) & filename_number_protein > 1}
 
-``` {r}
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Protein Counts by Filename")
 
 plot <- 
   results_protein[[i]] %>% 
   group_by(filename) %>% 
   summarise("protein count" = n()) %>%
   mutate(filename = sub('(^[^_]+_[^_]+_[^_]+)_(.*)$', '\\1_ \\2', filename)) %>% 
+  mutate(filename = stringr::str_trunc(filename, 50, "center")) %>% 
   # mutate(filename = stringr::str_trunc(filename, 40, side = "left")) %>%
   ggplot() +
   geom_col(
@@ -276,12 +284,56 @@ plotly::ggplotly(plot) %>%
 ```
 
 
-Row
--------------------------------------
+```{r dpi=300, echo=FALSE, eval=(fileType[[i]] == "tdreport")}
 
-### Proteoform Identifications, UpSet Plot
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Protein Identifications, UpSet Plot\n")
 
-```{r dpi=300, echo=FALSE}
+fraction_number_allhits <- 
+  results_protein_allhits[[i]] %>% 
+  dplyr::pull(
+    fraction
+  ) %>% 
+  unique() %>% 
+  length()
+
+if (fraction_number_allhits > 1) {
+  
+  results_protein_allhits[[i]] %>% 
+    dplyr::select(
+      ProteoformRecordNum,
+      fraction
+    ) %>%
+    dplyr::arrange(fraction) %>%
+    tidyr::pivot_wider(
+      names_from = fraction,
+      values_from =
+        "ProteoformRecordNum",
+      values_fn = list,
+      names_prefix = "Frac_"
+    ) %>%
+    purrr::flatten() %>%
+    list() %>%
+    rlang::set_names("1") %>% 
+    viztools::make_UpSet_plot()
+  
+} else {
+  
+  pander::pander("Only one fraction, no UpSet plot made") 
+  
+}
+
+
+```
+
+```{r dpi=300, echo=FALSE, eval=(fileType[[i]] == "tdreport")}
+
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Proteoform Identifications, UpSet Plot\n")
 
 fraction_number <- 
   results_protein_allhits[[i]] %>% 
@@ -309,6 +361,7 @@ if (fraction_number > 1) {
     list() %>%
     rlang::set_names("1") %>% 
     viztools::make_UpSet_plot()
+  
 } else {
   
   pander::pander("Only one fraction, no UpSet plot made") 
@@ -318,67 +371,124 @@ if (fraction_number > 1) {
 ```
 
 
-### Proteoform Identifications, Intersection Degree Plot
+```{r eval=(fileType[[i]] == "tdreport")}
 
-```{r}
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Protein Identifications, Intersection Degree Plot\n")
 
-results_protein_allhits[[i]] %>% 
-  dplyr::select(
-    ProteoformRecordNum,
-    fraction
-  ) %>%
-  dplyr::arrange(fraction) %>%
-  tidyr::pivot_wider(
-    names_from = fraction,
-    values_from =
-      ProteoformRecordNum,
-    values_fn = list,
-    names_prefix = "Frac_"
-  ) %>%
-  purrr::flatten() %>%
-  purrr::map(unique) %>% 
-  viztools::make_intersection_degree_plot(
-    Yrange = c(0, 100),
-    plotType = "Proteoform"
-  ) %>% 
-  plotly::ggplotly() %>% 
-  plotly::config(
-    displaylogo = FALSE,
-    toImageButtonOptions = download_button_params
-  )
+if (fraction_number_protein > 1) {
+  
+  results_protein_allhits[[i]] %>% 
+    dplyr::select(
+      AccessionNumber,
+      fraction
+    ) %>%
+    dplyr::arrange(fraction) %>%
+    tidyr::pivot_wider(
+      names_from = fraction,
+      values_from =
+        AccessionNumber,
+      values_fn = list,
+      names_prefix = "Frac_"
+    ) %>%
+    purrr::flatten() %>%
+    purrr::map(unique) %>% 
+    viztools::make_intersection_degree_plot(
+      Yrange = c(0, 100),
+      plotType = "Protein"
+    ) %>% 
+    plotly::ggplotly() %>% 
+    plotly::config(
+      displaylogo = FALSE,
+      toImageButtonOptions = download_button_params
+    )
+  
+} else {
+  
+  pander::pander("Only one fraction, no UpSet plot made") 
+  
+}
 
 ```
 
-Row {data-height=500}
--------------------------------------
 
-### Proteoform Identifications, Heatmap (Bin size = 1 kDa)
+```{r eval=(fileType[[i]] == "tdreport")}
 
-```{r}
+knitr::asis_output("\n")
+knitr::asis_output("Row\n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Proteoform Identifications, Intersection Degree Plot\n")
 
-results_protein_allhits[[i]] %>% 
+if (fraction_number_allhits > 1) {
+  
+  results_protein_allhits[[i]] %>% 
+    dplyr::select(
+      ProteoformRecordNum,
+      fraction
+    ) %>%
+    dplyr::arrange(fraction) %>%
+    tidyr::pivot_wider(
+      names_from = fraction,
+      values_from =
+        ProteoformRecordNum,
+      values_fn = list,
+      names_prefix = "Frac_"
+    ) %>%
+    purrr::flatten() %>%
+    purrr::map(unique) %>% 
+    viztools::make_intersection_degree_plot(
+      Yrange = c(0, 100),
+      plotType = "Proteoform"
+    ) %>% 
+    plotly::ggplotly() %>% 
+    plotly::config(
+      displaylogo = FALSE,
+      toImageButtonOptions = download_button_params
+    )
+  
+} else {
+  
+  pander::pander("Only one fraction, no Intersection Degree plot made") 
+  
+}
+
+
+```
+
+
+```{r eval=(fileType[[i]] == "tdreport")}
+
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("\n### Proteoform Identifications, Heatmap (Bin size = 1 kDa)")
+
+results_protein_allhits[[i]] %>%
   dplyr::group_by(
     ProteoformRecordNum,
     fraction
-  ) %>% 
+  ) %>%
   viztools::make_heatmap(
     plotType = "Proteoform",
     orientation = "v",
     binSize = 1000,
     massColname = "ObservedPrecursorMass",
     fractionColname = "fraction"
-  ) %>% 
-  plotly::ggplotly() %>% 
+  ) %>%
+  plotly::ggplotly() %>%
   plotly::config(
     displaylogo = FALSE,
     toImageButtonOptions = download_button_params
   )
 
+
 ```
 
-### Proteoform Identifications Heatmap, Result Sets (Bin size = 1 kDa)
+```{r eval=(fileType[[i]] == "tdreport")}
 
-```{r}
+knitr::asis_output("\n### Proteoform Identifications Heatmap, Result Sets (Bin size = 1 kDa)")
 
 proteoform_resultset_heatmap <- 
   results_proteoform[[i]] %>% 
@@ -402,39 +512,59 @@ plotly::ggplotly(proteoform_resultset_heatmap) %>%
 
 ```
 
+
 Row
 -------------------------------------
 
 ### Protein Identifications, Waffle Plot
 
-```{r, out.width="100%"}
+```{r, echo=FALSE}
 
-waffle1 <- 
+is_waffle_data_valid <- 
   results_protein_countsbyfraction %>%
-  dplyr::filter(tdreport_name == basename(filelist[[i]])) %>%
+  dplyr::filter(results_file_name == basename(fileList[[i]])) %>%
   dplyr::ungroup() %>% 
-  dplyr::select(-tdreport_name) %>% 
-  viztools::waffle_iron(
-    fraction_colname = "fraction"
-  )
+  dplyr::select(-fraction, -results_file_name) %>% 
+  unlist() %>% 
+  {is.na(.) | . == 0} %>% 
+  all() %>% 
+  {!.}
 
-fig1 <- image_graph(height = 2400, width = 3200, res = 300)
+if (is_waffle_data_valid == TRUE) {
+  
+  waffle1 <- 
+    results_protein_countsbyfraction %>%
+    dplyr::filter(results_file_name == basename(fileList[[i]])) %>%
+    dplyr::ungroup() %>% 
+    dplyr::select(-results_file_name) %>% 
+    viztools::waffle_iron(
+      fraction_colname = "fraction"
+    )
+  
+  # fig1 <- image_graph(height = 1200, width = 1600, res = 150)
+  
+  waffle1
+  
+  # dev.off()
 
-waffle1
-
-dev.off()
-
-magick::image_trim(fig1)
+  # magick::image_trim(fig1)
+  
+} else {
+  
+  cat("No valid data to use for Waffle plot")
+  
+}
 
 
 ```
 
-Row
--------------------------------------
 
-### Hit Count vs. Intact Monoisotopic Mass
+```{r eval=(fileType[[i]] == "tdreport")}
 
-```{r}
+knitr::asis_output("\n")
+knitr::asis_output("Row\n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("### Hit Count vs. Intact Monoisotopic Mass")
 
 allhits_sum <- 
   results_protein_allhits[[i]] %>% 
@@ -517,14 +647,16 @@ p2 <-
 
 plotly::subplot(p1, p2, shareX = T, shareY = F, titleY = T, titleX = T)
 
+
 ```
 
-Row
--------------------------------------
+```{r eval=(fileType[[i]] == "tdreport")}
 
-### -log10(Q-value) vs. Intact Monoisotopic Mass
+knitr::asis_output("\n")
+knitr::asis_output("Row\n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("### -log10(Q-value) vs. Intact Monoisotopic Mass")
 
-```{r}
 allhits_qvals <- 
   results_proteoform[[i]] %>%
   mutate(MonoisotopicMass = MonoisotopicMass/1000) %>% 

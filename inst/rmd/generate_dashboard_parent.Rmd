@@ -21,6 +21,7 @@ output:
 # knitr::opts_knit$set(base.dir = normalizePath(tempdir(), winslash = '/'))
 
 library(flexdashboard)
+library(knitr)
 library(magrittr)
 library(stringr)
 library(purrr)
@@ -42,50 +43,75 @@ if (is.null(fractionAssignments) == TRUE) {
   fracAss = "Manual"
 }
 
-```
-
-# Summary
-
-Row {data-width=600}
------------------------------------------------------------------------
-
-```{r include=FALSE}
-
-unique_PTMs <- 
-  results_proteoform_modcounts %>% 
-  dplyr::group_by(tdreport_name) %>% 
-  dplyr::summarize(UniquePTMs = length(unique(ModificationName))) %>% 
-  dplyr::pull(UniquePTMs)
-
-most_popular_name <- 
-  results_proteoform_modcounts %>% 
-  dplyr::group_by(tdreport_name) %>% 
-  dplyr::filter(Count == max(Count)) %>% 
-  dplyr::pull(ModificationName)
-
-most_popular_count <- 
-  results_proteoform_modcounts %>% 
-  dplyr::group_by(tdreport_name) %>% 
-  dplyr::filter(Count == max(Count)) %>% 
-  dplyr::pull(Count)
-
-```
-
-### `r htmltools::tags$h4("Files analyzed")`
-
-```{r}
-
 GUPPI_version <- 
   sessioninfo::session_info()$packages %>%
   dplyr::filter(package == "GUPPI") %>%
   .$loadedversion
 
+if (any(purrr::as_vector(fileType) == "tdreport")) {
+  
+  unique_PTMs <- 
+    results_proteoform_modcounts %>% 
+    dplyr::group_by(results_file_name) %>% 
+    dplyr::summarize(UniquePTMs = length(unique(ModificationName)))
+  
+  unique_PTMs2 <- 
+    map(fileList, basename) %>% 
+    unlist() %>% 
+    {tibble(results_file_name = .)} %>% 
+    left_join(unique_PTMs) %>% 
+    pull(UniquePTMs)
+  
+  most_popular_name <- 
+    results_proteoform_modcounts %>% 
+    dplyr::group_by(results_file_name) %>% 
+    dplyr::filter(Count == max(Count))
+  
+  most_popular_name2 <- 
+    map(fileList, basename) %>% 
+    unlist() %>% 
+    {tibble(results_file_name = .)} %>% 
+    left_join(most_popular_name) %>% 
+    pull(ModificationName)
+  
+  most_popular_count <- 
+    results_proteoform_modcounts %>% 
+    dplyr::group_by(results_file_name) %>% 
+    dplyr::filter(Count == max(Count)) %>% 
+    dplyr::pull(Count)
+  
+} else {
+  
+  unique_PTMs2 <- 
+    rep(NA, length(fileList))
+  
+  most_popular_name2 <- 
+    rep(NA, length(fileList))
+  
+}
+
+```
+
+# Summary
+
+Row
+-------------------------------------
+
+### `r htmltools::tags$h4("Files analyzed")`
+
+```{r, echo=FALSE}
+
 tibble(
-  `tdReport Name` = map(filelist, basename) %>% unlist(),
-  `Protein Count` = map(proteinlist, nrow) %>% unlist(),
-  `Proteoform Count` = map(proteoformlist, nrow) %>% unlist(),
-  `Unique PTM Count` = unique_PTMs,
-  `Most common PTM` = most_popular_name
+  `Results File Name` = map(fileList, basename) %>% unlist(),
+  `Protein Count` = map(results_protein[1:length(fileList)], nrow) %>%
+    map_if(is.null, ~NA) %>% 
+    unlist(),
+  `Proteoform Count` = 
+    map(results_proteoform[1:length(fileList)], nrow) %>%
+    map_if(is.null, ~NA) %>% 
+    unlist(),
+  `Unique PTM Count` = unique_PTMs2,
+  `Most common PTM` = most_popular_name2
 ) %>% 
   knitr::kable() 
 
@@ -105,16 +131,17 @@ GUPPI version: `r GUPPI_version`
 
 GUPPI report type: `r if (staticDashboard == FALSE) "Dynamic (includes HTML widgets)" else "Static"`
 
-Row {data-height=400}
------------------------------------------------------------------------
 
-### `r htmltools::tags$h4("PTM summary")`
+```{r eval=any(purrr::as_vector(fileType) == "tdreport")}
 
-```{r}
+knitr::asis_output("\n")
+knitr::asis_output("Row {data-height:400}\n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("### `r htmltools::tags$h4('PTM summary')`")
 
 PTM_summary_table <- 
   results_proteoform_modcounts %>% 
-  dplyr::select(tdreport_name, dplyr::everything())
+  dplyr::select(results_file_name, dplyr::everything())
 
 if (staticDashboard == FALSE) {
   
@@ -125,9 +152,9 @@ if (staticDashboard == FALSE) {
       options = list(
         autoWidth = TRUE,
         deferRender = TRUE,
-        scrollY = "425px",
+        scrollY = "350px",
         scrollX = "600px",
-        scroller = TRUE,
+        scroller = FALSE,
         columnDefs = list(
           list(
             className = 'dt-center'
@@ -153,15 +180,20 @@ if (staticDashboard == FALSE) {
   
 }
 
+
 ```
 
-Row {data-height=400}
+Row {data-height:400}
 -----------------------------------------------------------------------
 
 ### `r htmltools::tags$h4("Search parameters")`
 
-```{r}
+```{r eval=any(purrr::as_vector(fileType) == "tdreport")}
 
+knitr::asis_output("\n")
+knitr::asis_output("Row {data-height:400}\n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("### `r htmltools::tags$h4('Search parameters')`")
 
 search_parameters_table <- 
   results_resultparameters %>% 
@@ -170,7 +202,7 @@ search_parameters_table <-
       stringr::str_replace_all(Value, stringr::fixed(","), ";")
   ) %>% 
   dplyr::select(
-    tdreport_name, ResultSet, Name, Value, IsActive, GroupName, dplyr::everything()
+    results_file_name, ResultSet, Name, Value, IsActive, GroupName, dplyr::everything()
   )
 
 if (staticDashboard == FALSE) {
@@ -182,9 +214,9 @@ if (staticDashboard == FALSE) {
       options = list(
         autoWidth = TRUE,
         deferRender = TRUE,
-        scrollY = "425px",
+        scrollY = "350px",
         scrollX = "600px",
-        scroller = TRUE,
+        scroller = FALSE,
         columnDefs = list(
           list(
             className = 'dt-center'
@@ -210,85 +242,78 @@ if (staticDashboard == FALSE) {
   
 }
 
+
 ```
 
-Row {data-width=600}
------------------------------------------------------------------------
 
-### `r htmltools::tags$h4("Protein ID UpSet for analyzed TDReports")`
+### 
 
-```{r, fig.width=10, fig.height=6, dpi = 200}
+```{r, fig.width=10, fig.height=6, dpi = 200, eval=length(fileList) > 1}
 
-if (length(filelist) > 1) {
-  
-  proteins_list <- 
-    results_protein %>%
-    .[1:(length(.) - 1)] %>% 
-    map(~.$UNIPROTKB) %>% 
-    set_names(
-      map(filelist, basename) %>% 
-        map(tools::file_path_sans_ext) %>% 
-        map(str_wrap, width = 15)
-    )
-  
-  UpSetR::upset(
-    UpSetR::fromList(proteins_list),
-    nintersects = NA,
-    sets.x.label = "Total Protein IDs",
-    keep.order = T,
-    mainbar.y.label = "Unique Protein IDs in Intersection",
-    text.scale =  c(2, 2.5, 2, 2, 1.5, 2),
-    point.size = 4,
-    line.size = 1.5,
-    group.by = "degree"
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("### `r htmltools::tags$h4('Protein ID UpSet for analyzed results files')`")
+
+proteins_list <- 
+  results_protein %>%
+  .[1:(length(.) - 1)] %>% 
+  map(~.$UNIPROTKB) %>% 
+  set_names(
+    map(fileList, basename) %>% 
+      map(tools::file_path_sans_ext) %>% 
+      map(str_wrap, width = 15)
   )
-  
-} else {
-  
-  pander::pander("Only one TDReport analyzed, no UpSet plot made") 
-  
-}
+
+UpSetR::upset(
+  UpSetR::fromList(proteins_list),
+  nintersects = NA,
+  sets.x.label = "Total Protein IDs",
+  keep.order = T,
+  mainbar.y.label = "Unique Protein IDs in Intersection",
+  text.scale =  c(2, 2.5, 2, 2, 1.5, 2),
+  point.size = 4,
+  line.size = 1.5,
+  group.by = "degree"
+)
 
 ```
 
-### `r htmltools::tags$h4("Proteoform ID UpSet for analyzed TDReports")`
 
-```{r, fig.width=10, fig.height=6, dpi = 200}
+```{r, fig.width=10, fig.height=6, dpi = 200, eval=all(purrr::as_vector(fileType) == "tdreport") && length(fileList) > 1}
 
-if (length(filelist) > 1) {
-  
-  pfrms_list <- 
-    results_proteoform %>%
-    .[1:(length(.) - 1)] %>% 
-    map(~.$ProteoformRecordNum) %>% 
-    set_names(
-      map(filelist, basename) %>% 
-        map(tools::file_path_sans_ext) %>% 
-        map(str_wrap, width = 15)
-    )
-  
-  UpSetR::upset(
-    UpSetR::fromList(pfrms_list),
-    nintersects = NA,
-    sets.x.label = "Total Proteoform IDs",
-    keep.order = T,
-    mainbar.y.label = "Unique Proteoform IDs in Intersection",
-    text.scale =  c(2, 2.5, 2, 2, 1.5, 2),
-    point.size = 4,
-    line.size = 1.5,
-    group.by = "degree"
+knitr::asis_output("\n")
+knitr::asis_output("Row \n")
+knitr::asis_output("-------------------------------------\n")
+knitr::asis_output("### `r htmltools::tags$h4('Proteoform ID UpSet for analyzed results files')`")
+
+
+pfrms_list <-
+  results_proteoform %>%
+  .[1:(length(.) - 1)] %>%
+  map(~.$ProteoformRecordNum) %>%
+  set_names(
+    map(fileList, basename) %>%
+      map(tools::file_path_sans_ext) %>%
+      map(str_wrap, width = 15)
   )
-  
-} else {
-  
-  pander::pander("Only one TDReport analyzed, no UpSet plot made") 
-  
-}
+
+UpSetR::upset(
+  UpSetR::fromList(pfrms_list),
+  nintersects = NA,
+  sets.x.label = "Total Proteoform IDs",
+  keep.order = T,
+  mainbar.y.label = "Unique Proteoform IDs in Intersection",
+  text.scale =  c(2, 2.5, 2, 2, 1.5, 2),
+  point.size = 4,
+  line.size = 1.5,
+  group.by = "degree"
+)
 
 
 ```
 
-<!-- For generating TDReport data tabs -->
+<!-- For generating results file data tabs -->
 
 ```{r include=FALSE}
 
@@ -296,7 +321,7 @@ out <- NULL
 
 options(knitr.duplicate.label = 'allow')
 
-for (i in seq_along(filelist)) {
+for (i in seq_along(fileList)) {
   
   out <- c(
     out, 

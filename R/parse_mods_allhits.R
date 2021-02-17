@@ -8,6 +8,8 @@ parse_mods_allhits <-
       tbl,
       modification = NULL
    ) {
+      
+      if (all(is.na(tbl) == TRUE)) return(NA)
 
       if (is.null(modification) == TRUE) {
 

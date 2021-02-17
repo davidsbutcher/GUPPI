@@ -118,49 +118,53 @@ guppi <-
          msg = "staticDashboard should be TRUE or FALSE"
       )
       
-      assertthat::assert_that(
-         assertthat::is.dir(fs::path_dir(dashboardPath)),
-         msg = "dashboardPath parent is not a recognized path"
-      )
+      # if (makeDashboard == TRUE) {
+      #    assertthat::assert_that(
+      #       assertthat::is.dir(outputDir),
+      #       msg = "dashboardPath parent is not a recognized path"
+      #    )
+      # }
       
       
       
       ## Check file extensions ------------------------------------------------
       
-      filelist <-
+      fileList <-
          get_data_path(
             filedir,
             filename,
-            tools::file_ext(filename)
+            fs::path_ext(filename)
          )
       
-      extension <-
-         filelist %>%
-         purrr::map(tools::file_ext)
+      fileExtension <-
+         purrr::map(
+            fileList,
+            ~tolower(fs::path_ext(.x))
+         )
+      
+      # assertthat::assert_that(
+      #    assertthat::assert_that(
+      #       length(unique(extension)) <= 1
+      #    ),
+      #    msg = "More than one file extension present. Only one type of file is allowed."
+      # )
       
       assertthat::assert_that(
          assertthat::assert_that(
-            length(unique(extension)) <= 1
-         ),
-         msg = "More than one file extension present. Only one type of file is allowed."
-      )
-      
-      assertthat::assert_that(
-         assertthat::assert_that(
-            length(extension) != 0
+            length(fileExtension) != 0
          ),
          msg = "No acceptable input files. Only tdReport, csv, or xlsx are allowed."
       )
       
       # Check for allowed extensions, case insensitive
       
-      allowed_extensions <- c("tdReport", "csv", "tsv", "xlsx")
+      allowed_extensions <- c("tdreport", "csv", "tsv", "xlsx")
       
       assertthat::assert_that(
          purrr::map_chr(
-            extension,
+            fileExtension,
             ~stringr::str_detect(
-               .x, fixed(allowed_extensions, ignore_case = TRUE)
+               .x, stringr::fixed(allowed_extensions, ignore_case = TRUE)
             ) %>% 
                any()
          ) %>% 
@@ -273,89 +277,185 @@ guppi <-
       
       ## Read Data Files -----------------------------------------------------------------------------
       
-      # XXX NEED NEW FUNCTION HERE TO READ INPUT FILES AND GET ITS TYPE! THEN 
-      # SWITCH STATEMENT TO CHOOSE FUNCTIONS FOR READING??
+      # Determine software of origin
+      
+      fileType <- 
+         purrr::map(
+            fileList,
+            determine_software
+         )
       
       
-       
-      if (extension[[1]] == "csv") {
-         
-         message("Reading csv files...")
-         
-         proteinlist  <-
-            filelist %>%
-            purrr::map(readr::read_csv)
-         
-         tdreport_file <- FALSE
-         
-      } else if (extension[[1]] == "xlsx") {
-         
-         message("Reading xlsx files...")
-         
-         proteinlist  <-
-            filelist %>%
-            purrr::map(readxl::read_xlsx)
-         
-         tdreport_file <- FALSE
-         
-      } else if (extension[[1]] == "tdReport") {
-         
-         message("\nReading protein data from tdReport\n")
-         
-         proteinlist <-
-            filelist %>%
-            purrr::map(
-               read_tdreport_protein,
-               fdr_cutoff = fdr
-            )
-         
-         message("\nReading full protein data from tdReport\n")
-         
-         proteinlistfull <-
-            filelist %>%
-            purrr::map(
-               read_tdreport_protein_full,
-               fdr_cutoff = fdr
-            )
-         
-         message("\nReading proteoform data from tdReport\n")
-         
-         proteoformlist <-
-            filelist %>%
-            purrr::map(
-               read_tdreport_proteoform,
-               fdr_cutoff = fdr
-            )
-         
-         tdreport_file <- TRUE
-         
-      } else {
-         
-         stop("No acceptable input files. Only tdReport, csv, or xlsx are allowed.")
-         
-      }
+      # Get raw results separately for protein, protein_full (tdreport only),
+      # and proteoforms
       
-      names(proteinlist) <- filelist
+      # Raw results, protein
+      
+      raw_results_protein <- 
+         purrr::pmap(
+            list(
+               fileType,
+               fileList,
+               fileExtension
+            ),
+            ~switch(
+               ..1,
+               "tdreport" = 
+                  read_tdreport_protein(..2),
+               "accessionlist" = 
+                  switch(
+                     ..3,
+                     "tsv" = readr::read_tsv(..2),
+                     "csv" = readr::read_csv(..2),
+                     "xlsx" = readxl::read_xlsx(..2)
+                  ),
+               "toppic" = 
+                  switch(
+                     ..3,
+                     "tsv" = readr::read_tsv(..2, skip = toppic_lines_to_skip(..2)),
+                     "csv" = readr::read_csv(..2, skip = toppic_lines_to_skip(..2)),
+                     "xlsx" = readxl::read_xlsx(..2, skip = toppic_lines_to_skip(..2))
+                  ),
+               "mspathfinder" = 
+                  switch(
+                     ..3,
+                     "tsv" = readr::read_tsv(..2),
+                     "csv" = readr::read_csv(..2),
+                     "xlsx" = readxl::read_xlsx(..2)
+                  ),
+               "unknown" = NA
+            )
+         ) %>% 
+         purrr::set_names(fileList)
+      
+      # Raw results, protein full
+      
+      raw_results_protein_full <- 
+         purrr::pmap(
+            list(
+               fileType,
+               fileList,
+               fileExtension
+            ),
+            ~switch(
+               ..1,
+               "tdreport" = 
+                  read_tdreport_protein_full(..2),
+               "accessionlist" = NA,
+               "toppic" = NA,
+               "mspathfinder" = NA,
+               "unknown" = NA
+            )
+         ) %>% 
+         purrr::set_names(fileList)
+      
+      # Raw results, proteoform
+      
+      raw_results_proteoform <- 
+         purrr::pmap(
+            list(
+               fileType,
+               fileList,
+               fileExtension
+            ),
+            ~switch(
+               ..1,
+               "tdreport" = 
+                  read_tdreport_proteoform(..2),
+               "accessionlist" = 
+                  NA,
+               "toppic" = 
+                  switch(
+                     ..3,
+                     "tsv" = readr::read_tsv(..2, skip = toppic_lines_to_skip(..2)),
+                     "csv" = readr::read_csv(..2, skip = toppic_lines_to_skip(..2)),
+                     "xlsx" = readxl::read_xlsx(..2, skip = toppic_lines_to_skip(..2))
+                  ),
+               "mspathfinder" = 
+                  switch(
+                     ..3,
+                     "tsv" = readr::read_tsv(..2),
+                     "csv" = readr::read_csv(..2),
+                     "xlsx" = readxl::read_xlsx(..2)
+                  ),
+               "unknown" = NA
+            )
+         ) %>% 
+         purrr::set_names(fileList)
+      
+      # Reshape protein results selectively, as needed to ensure compatibility 
+      # with functions later in the workflow
+      
+      raw_results_protein_reshaped <- 
+         purrr::pmap(
+            list(
+               fileType,
+               raw_results_protein
+            ),
+            ~switch(
+               ..1,
+               "tdreport" = 
+                  ..2,
+               "accessionlist" = 
+                  ..2,
+               "toppic" = 
+                  reshape_toppic_protein(..2),
+               "mspathfinder" = 
+                  reshape_mspathfinder_protein(..2),
+               "unknown" = 
+                  NA
+            )
+         )
+      
+      ## raw_results_protein_full_reshaped is NOT DEFINED HERE
+      ## because no reshaping needs to occur
+      
+      # Reshape proteoform results selectively, as needed to ensure  
+      # compatibility with functions later in the workflow
+      
+      raw_results_proteoform_reshaped <- 
+         purrr::pmap(
+            list(
+               fileType,
+               raw_results_proteoform
+            ),
+            ~switch(
+               ..1,
+               "tdreport" = 
+                  ..2,
+               "accessionlist" = 
+                  ..2,
+               "toppic" = 
+                  reshape_toppic_proteoform(..2),
+               "mspathfinder" = 
+                  reshape_mspathfinder_proteoform(..2),
+               "unknown" = 
+                  NA
+            )
+         )
       
       ## Process protein results ------------------------------------------------
       
       results_protein <-
-         proteinlist %>%
-         purrr::map(
-            add_uniprot_info,
-            database = UPdatabase,
-            tdrep = tdreport_file
-         ) %>%
-         purrr::map2(filelist, get_GO_terms2, go_locs_table) %>%
-         purrr::map(add_GRAVY) %>%
-         purrr::map(add_masses) %>%
-         purrr::map(
-            add_fraction,
-            assignments = fractionAssignments
+         purrr::pmap(
+            list(
+               raw_results_protein_reshaped,
+               fileList
+            ),
+            ~add_uniprot_info(..1, database = UPdatabase) %>% 
+               get_GO_terms2(..2, go_locs_table) %>% 
+               add_GRAVY() %>% 
+               dplyr::mutate(
+                  MonoisotopicMass = add_masses(SEQUENCE, monoisotopic = TRUE),
+                  AverageMass = add_masses(SEQUENCE, monoisotopic = FALSE)
+               ) %>% 
+               add_fraction(assignments = fractionAssignments)
          )
       
+      # Set names for results_protein
+      
       names(results_protein) <-
-         unlist(filelist) %>%
+         unlist(fileList) %>%
          basename()
       
       results_protein[[length(results_protein)+1]] <-
@@ -374,16 +474,23 @@ guppi <-
       # maybe this should be called proteoform allhits?
       
       results_protein_allhits <-
-         proteinlistfull %>%
+         raw_results_protein_full %>%
          purrr::map(add_GRAVY_allhits) %>%
          purrr::map(
             add_fraction,
             assignments = fractionAssignments
          ) %>%
-         purrr::map(parse_mods_allhits, modification = tdreport_mods)
+         purrr::map(
+            parse_mods_allhits,
+            modification = tdreport_mods
+         ) %>% 
+         purrr::map_if(
+            ~all(is.na(.x)),
+            tibble::tibble
+         )
       
       names(results_protein_allhits) <-
-         unlist(filelist) %>%
+         unlist(fileList) %>%
          basename()
       
       # Proteoform results, all hits, hit counts
@@ -391,7 +498,7 @@ guppi <-
       # in the pform report
       
       results_proteoform_hitcounts <-
-         results_protein_allhits %>%
+         purrr::discard(results_protein_allhits, ~all(is.na(.x))) %>% 
          purrr::map(
             ~dplyr::group_by(
                .x,
@@ -409,105 +516,144 @@ guppi <-
       # For TDReports without proteoform record nums (i.e. current version of
       # ProSightPD) replace them with sequential numbers
       
-      proteoformlist <-
-         proteoformlist %>%
-         purrr::map(
-            ~dplyr::filter(.x, IntactSequence != "DECOY") %>%
-               {
-                  if (all(.$ProteoformRecordNum) == 0) {
-                     dplyr::mutate(
-                        .,
-                        ProteoformRecordNum =
-                           seq_len(length(.$ProteoformRecordNum))
-                     )
-                  } else {.}
-               }
+      raw_results_proteoform_reshaped <- 
+         purrr::pmap(
+            list(
+               fileType,
+               raw_results_proteoform_reshaped
+            ),
+            ~switch(
+               ..1,
+               "tdreport" = 
+                  replace_missing_PFR(..2),
+               "accessionlist" = 
+                  ..2,
+               "toppic" = 
+                  ..2,
+               "mspathfinder" = 
+                  ..2,
+               "unknown" = 
+                  ..2
+            )
          )
       
-      if (all(proteoformlist$ProteoformRecordNum) == 0) {
-         
-         proteoformlist <-
-            proteoformlist %>%
-            dplyr::mutate(
-               ProteoformRecordNum =
-                  seq_len(length(proteoformlist$ProteoformRecordNum))
-            )
-         
-      }
+      # Count all types of modifications in the results. ONLY WORKS
+      # FOR TDREPORT FILES, which provides mod data in an easy-to-read
+      # format
       
       results_proteoform_modcounts <-
-         proteoformlist %>%
-         purrr::map(
-            ~parse_mods_special(.x, modification = tdreport_mods)
+         purrr::pmap(
+            list(
+               fileType,
+               raw_results_proteoform_reshaped,
+               fileList
+            ),
+            ~switch(
+               ..1,
+               "tdreport" = 
+                  parse_mods_special(..2, modification = tdreport_mods) %>% 
+                  dplyr::mutate(results_file_name = basename(..3)),
+               NULL
+            )
          ) %>%
-         purrr::map2(
-            filelist,
-            ~dplyr::mutate(.x, tdreport_name = basename(.y))
-         ) %>%
+         purrr::compact() %>% 
          purrr::reduce(dplyr::union_all)
       
+      
+      # Process raw proteoform results to FINAL FORM
+      
       results_proteoform <-
-         proteoformlist %>%
+         raw_results_proteoform_reshaped %>%
          purrr::map(
             add_uniprot_info,
-            database = UPdatabase,
-            tdrep = TRUE
+            database = UPdatabase
          ) %>%
          purrr::map(
             add_fraction,
             assignments = fractionAssignments
          ) %>%
-         purrr::map(
-            parse_mods,
-            modification = tdreport_mods
-         ) %>%
-         purrr::map(
-            ~dplyr::mutate(
-               .x,
-               GRAVY = Peptides::hydrophobicity(ProteoformSequence)
+         purrr::map2(
+            fileType,
+            ~switch(
+               .y,
+               "tdreport" = 
+                  parse_mods(
+                     .x,
+                     modification = tdreport_mods
+                  ),
+               .x
             )
          ) %>%
-         purrr::map(
-            ~{if (!"IsEndogenousCleavage" %in% names(.x)) dplyr::mutate(.x, IsEndogenousCleavage = NA) else .x} %>%
-               {if (!"IsSubsequence" %in% names(.)) dplyr::mutate(., IsSubsequence = NA) else .} %>%
-               {if (!"PriorWeight" %in% names(.)) dplyr::mutate(., PriorWeight = NA) else .} %>%
-               dplyr::select(
-                  -ExternalId,
-                  -IsEndogenousCleavage,
-                  -IsoformId,
-                  -ChemicalProteoformId,
-                  -AggregationLevel,
-                  -HitId,
-                  -IsSubsequence,
-                  -PriorWeight,
-                  -EntryId,
-                  -ScoreForDecoy,
-                  -ObservedPrecursorMassType,
-                  -ResultSetId,
-                  -DataFileId,
-                  -IsActive,
-                  -Creator,
-                  -CreationDate,
-                  -SEQUENCE
-               )
-         ) %>%
-         purrr::map(
+         purrr::map2(
+            fileType,
+            ~switch(
+               .y,
+               "tdreport" = 
+                  dplyr::mutate(.x, ProteoformSequence_GRAVY = Peptides::hydrophobicity(ProteoformSequence)),
+               "accessionlist" = 
+                  .x,
+               "toppic" = 
+                  dplyr::mutate(.x, IntactProteinSequence_GRAVY = Peptides::hydrophobicity(SEQUENCE)),
+               "mspathfinder" = 
+                  dplyr::mutate(.x, ProteoformSequence_GRAVY = Peptides::hydrophobicity(Sequence))  
+            )
+         ) %>% 
+         purrr::map_if(
+            ~!all(is.na(.x)),
             ~dplyr::select(
                .x,
-               UNIPROTKB,
-               ProteoformRecordNum,
-               IntactSequence,
-               ProteoformSequence,
-               dplyr::everything()
+               -dplyr::any_of(
+                  c(
+                     "ExternalId",
+                     "IsEndogenousCleavage",
+                     "IsoformId",
+                     "ChemicalProteoformId",
+                     "AggregationLevel",
+                     "HitId",
+                     "IsSubsequence",
+                     "PriorWeight",
+                     "EntryId",
+                     "ScoreForDecoy",
+                     "ObservedPrecursorMassType",
+                     "ResultSetId",
+                     "DataFileId",
+                     "IsActive",
+                     "Creator",
+                     "CreationDate"
+                  )
+               )
             )
          ) %>%
-         purrr::map2(filelist, get_GO_terms2, go_locs_table) %>%
-         purrr::map(
+         purrr::map_if(
+            ~!all(is.na(.x)),
+            ~dplyr::select(
+               .x,
+               dplyr::any_of(
+                  c(
+                     "UNIPROTKB",
+                     "ProteoformRecordNum",
+                     "IntactSequence",
+                     "ProteoformSequence"
+                  )
+               ),
+               dplyr::everything()
+            )
+         ) %>% 
+         purrr::map2(
+            fileList,
+            ~get_GO_terms2(
+               .x,
+               .y,
+               go_locs_table
+            )
+         ) %>%
+         purrr::map_if(
+            ~!all(is.na(.x)),
             ~dplyr::left_join(.x, results_proteoform_hitcounts)
          )
       
       names(results_proteoform) <-
-         unlist(filelist) %>%
+         unlist(fileList) %>%
          basename()
       
       results_proteoform[[length(results_proteoform)+1]] <-
@@ -568,20 +714,25 @@ guppi <-
          
          ## Save protein results, all hits ------------
          
+         # Only run if at least one tdReport is included
          
-         if (dir.exists(glue::glue("{outputdir}/protein_results_allhits")) == FALSE) {
-            dir.create(glue::glue("{outputdir}/protein_results_allhits"))
+         if (any(purrr::as_vector(fileType) == "tdreport")) {
+            
+            if (dir.exists(glue::glue("{outputdir}/protein_results_allhits")) == FALSE) {
+               dir.create(glue::glue("{outputdir}/protein_results_allhits"))
+            }
+            
+            fileList %>%
+               purrr::map(basename) %>%
+               purrr::map(tools::file_path_sans_ext) %>%
+               glue::glue_data("{outputdir}/protein_results_allhits/{.}_allhits.xlsx") %>%
+               as.list() %>%
+               purrr::walk2(
+                  results_protein_allhits,
+                  ~writexl::write_xlsx(.y, path = .x)
+               )
+            
          }
-         
-         filelist %>%
-            purrr::map(basename) %>%
-            purrr::map(tools::file_path_sans_ext) %>%
-            glue::glue_data("{outputdir}/protein_results_allhits/{.}_allhits.xlsx") %>%
-            as.list() %>%
-            purrr::walk2(
-               results_protein_allhits,
-               ~writexl::write_xlsx(.y, path = .x)
-            )
          
          ## Save proteoform results ------------
          
@@ -606,7 +757,10 @@ guppi <-
             glue::glue("\nSaving proteoform results to {resultsname}")
          )
          
-         results_proteoform %>%
+         purrr::map(
+            results_proteoform,
+            ~{if (all(is.na(.x))) tibble::tibble() else .x}
+         ) %>% 
             writexl::write_xlsx(path = resultsname)
          
          
@@ -615,13 +769,25 @@ guppi <-
       
       # Get result parameters ---------------------------------------------------
       
-      results_resultparameters <-
-         purrr::map(
-            filelist,
-            ~get_result_parameters(.x) %>%
-               dplyr::mutate(tdreport_name = basename(.x))
-         ) %>%
-         purrr::reduce(dplyr::union_all)
+      # Only run if at least one tdReport is included
+      
+      if (any(purrr::as_vector(fileType) == "tdreport")) {
+         
+         results_resultparameters <-
+            purrr::map2(
+               fileType,
+               fileList,
+               ~switch(
+                  .x,
+                  "tdreport" =
+                     get_result_parameters(.y) %>%
+                     dplyr::mutate(results_file_name = basename(.y)),
+                  NULL
+               )
+            ) %>%
+            purrr::reduce(dplyr::union_all)
+         
+      }
       
       
       # Make Dashboard ----------------------------------------------------------
